@@ -1,5 +1,5 @@
 # CppRoboPlan
-![CoverImage](/assets/images/coverImage.png)
+![CoverImage](coverImage.png)
 
 CppRoboPlan is a modern **C++ educational motion planning** library designed for robotic manipulator applications.
 It provides fundamental tools for building planning pipelines, including configuration space modeling, collision checking, and both roadmap- and sampling-based planners.
@@ -29,9 +29,12 @@ For Installation look at [installation.md](installation.md)
 ## Demo video
 Look at the videos Example in /assets/video
 ### RRT Connect Demo
+
+![RRTConnect](RRTConnect.gif)
+
 ### Inverse Kinematics Example
 
-
+![DifferentialIk](DifferentialIk.gif)
 
 
 

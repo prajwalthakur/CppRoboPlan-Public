@@ -2656,3 +2656,10 @@ GENERATE_LEGEND        = YES
 # The default value is: YES.
 
 DOT_CLEANUP            = YES
+
+
+## Custom Path :
+
+IMAGE_PATH = assets/images \
+             assets/gif \
+             assets/video

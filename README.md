@@ -2,6 +2,10 @@
 
 ![CoverImage](assets/images/coverImage.png)
 CppRoboPlan is a modern **C++ educational motion planning** library designed for robotic manipulator applications.
+
+It is authored and maintained by [Prajwal Thakur](https://github.com/prajwalthakur).
+
+
 It provides fundamental tools for building planning pipelines, including configuration space modeling, collision checking, and both roadmap- and sampling-based planners.
 
 The goal of CppRoboPlan is to offer a fast, modular, and lightweight educational and prototyping alternative to existing robotics planning frameworks, written entirely in C++ with CMake-based builds.
@@ -20,16 +24,22 @@ For installation instructions and full documentation, please refer to the Projec
 You may download the videos Example from /assets/video
 ### RRT Connect Demo ( examples/RRTConnectPlanner/main.cpp )
 
-
-https://github.com/user-attachments/assets/570a6e85-a6f4-4c99-bc30-bf26266fa9af
+![RRTConnect](assets/gif/RRTConnect.gif)
 
 
 ### Differential Inverse Kinematics Example (examples/InverseKinematics/main.cpp)
 
 
-https://github.com/user-attachments/assets/8bcb1e3b-c6e0-43a4-b92b-e1f1be805daa
+![DifferentialIk](assets/gif/DifferentialIk.gif)
 
 
 
 ## ToDO:
 1. The next release will remove the redundant use of std::vector with Eigen matrices and vectors.
+
+
+### <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg" width="25"/> Author & Maintainer
+
+CppRoboPlan is developed and maintained by [**Prajwal Thakur**](https://github.com/PrajwalThakur).  
+If you use this library or build upon it, please consider citing or acknowledging the project.  
+Contributions and suggestions are welcome — feel free to open an issue or pull request.

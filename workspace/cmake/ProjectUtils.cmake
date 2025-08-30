@@ -144,18 +144,6 @@ function(project_add_example)
 endfunction()
 ###############################################################################################
 
-# project_add_post()
-#
-# Utility function for project_add_library and project_add_executable (and
-# related), called after the target is created
-# function(project_add_post)
-#   project_get_target_name(_target_name)
-#   # Show CMakeLists.txt in the embed group (rather than top-level)
-#   source_group("${PROJECT_EMBED_FOLDER}" FILES "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt")
-#   # Show force-include header in embed folder
-#   project_append_source_files(${_target_name} "${PROJECT_FORCE_INCLUDE_FILE}")
-#   source_group("${PROJECT_EMBED_FOLDER}" FILES "${PROJECT_FORCE_INCLUDE_FILE}")
-# endfunction()
 
 
 ###############################################################################################
