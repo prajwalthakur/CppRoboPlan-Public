@@ -1,0 +1,10 @@
+project_add_unit_tests()
+find_package(pinocchio REQUIRED)
+find_package(drake REQUIRED)
+# Optional: Eigen is already a dependency of pinocchio target, but finding it explicitly is harmless
+find_package(Eigen3 QUIET)
+project_target_link_libraries(pinocchio::pinocchio)
+project_target_link_libraries(drake::drake)
+project_target_link_libraries(core)
+project_target_link_libraries(planner)
+

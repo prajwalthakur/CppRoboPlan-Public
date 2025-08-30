@@ -1,0 +1,99 @@
+# NOTE: These rules are not enforced on the external folder.
+
+**/html
+**/latex
+# Editor Files
+*.vscode
+*.idea
+**/.vs
+
+# Build files.
+**/build
+**/libraries
+**/install
+**/package
+src/core/file/ConfigPath.*
+src/core/version/VersionData.*
+
+# Documentation
+docs/generated
+docs/Documentation.html
+
+# Log files.
+**/logs
+*.log
+# Export files
+**/export
+# Emacs backups.
+*~
+
+# Compiled python files.
+*pyc
+*pickle
+
+# Python packaging folders.
+*.egg-info
+**/dist
+
+# Generated header files.
+*_generated.h
+
+# Gdev configuration files.
+gdev.cfg
+
+# Generated gdev files.
+*.gdev
+
+# Java class files
+*.class
+
+# Vim swap files
+*.swp
+
+# Output files
+*.o
+
+# Original files
+*.orig
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Ignore the generated protoc files and dds files
+**/src/network/protocol/*
+
+# ImGUI file 
+imgui.ini
+
+# Project specific files
+**/cmake/buildFiles/releaseManifest.json

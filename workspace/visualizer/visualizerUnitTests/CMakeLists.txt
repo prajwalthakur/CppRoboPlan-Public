@@ -1,0 +1,5 @@
+project_add_unit_tests()
+project_target_link_libraries(core)
+project_target_link_libraries(planner)
+project_target_link_libraries(visualizer)
+

@@ -1,0 +1,84 @@
+name: Build & Deploy Docs
+
+on:
+  push:
+    branches: [ release ]     # change if your default branch differs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen & Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz curl
+
+      # Skip this step if you vendor these files under docs/
+      - name: Fetch doxygen-awesome-css
+        working-directory: docs
+        run: |
+          curl -L -o doxygen-awesome.css https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/main/doxygen-awesome.css
+          curl -L -o doxygen-awesome-darkmode-toggle.js https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/main/doxygen-awesome-darkmode-toggle.js || true
+
+      - name: Build docs with Doxygen
+        run: doxygen docs/Doxyfile
+
+      - name: Resolve Doxygen HTML output path
+        id: resolve
+        shell: bash
+        run: |
+          # Extract OUTPUT_DIRECTORY and HTML_OUTPUT (strip comments, trim)
+          OD=$(awk -F= '/^[[:space:]]*OUTPUT_DIRECTORY[[:space:]]*=/{print $2}' docs/Doxyfile | sed 's/#.*//' | xargs)
+          HO=$(awk -F= '/^[[:space:]]*HTML_OUTPUT[[:space:]]*=/{print $2}' docs/Doxyfile | sed 's/#.*//' | xargs)
+
+          # Defaults per Doxygen
+          if [ -z "$HO" ]; then HO="html"; fi
+
+          # If OUTPUT_DIRECTORY is empty, output is next to the Doxyfile (docs/ + HTML_OUTPUT)
+          if [ -z "$OD" ]; then
+            ARTIFACT_PATH="docs/${HO}"
+          else
+            # Normalize potential trailing slashes
+            OD="${OD%/}"
+            ARTIFACT_PATH="${OD}/${HO}"
+          fi
+
+          echo "ARTIFACT_PATH=$ARTIFACT_PATH"
+          if [ ! -d "$ARTIFACT_PATH" ]; then
+            echo "ERROR: Resolved path '$ARTIFACT_PATH' does not exist."
+            echo "Check OUTPUT_DIRECTORY and HTML_OUTPUT in docs/Doxyfile."
+            exit 1
+          fi
+          echo "artifact_path=$ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.resolve.outputs.artifact_path }}
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
