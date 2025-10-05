@@ -11,10 +11,10 @@ include(ProjectUtils)
 
 # Add modules
 add_subdirectory(core)
-add_subdirectory(planner)
 add_subdirectory(inverseKinematics)
-add_subdirectory(visualizer)
 add_subdirectory(models)
+add_subdirectory(planner)
+add_subdirectory(visualizer)
 add_subdirectory(examples)
 
 

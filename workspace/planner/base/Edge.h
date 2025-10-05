@@ -7,8 +7,10 @@ namespace  cpproboplan::planner
     class plEdge
     {
         public:
+            // Constructor.
             plEdge()=default;
             plEdge(plNode* nodeFrom, plNode* nodeTo):mnodeFrom(nodeFrom), mNodeTo(nodeTo){};
+            // Destructor.
             ~plEdge()=default;
         private:
             rplwkPtr<plNode> mNodeFrom{nullptr};
@@ -18,6 +20,4 @@ namespace  cpproboplan::planner
             bool mIsBiDirctional{false};
 
     };
-
-
 }

@@ -14,48 +14,49 @@
 #include <vector>
 #include <unordered_set>
 #include <memory>
-namespace cpproboplan
-{
-    using rplqState = pinocchio::Model::ConfigVectorType;
 
-    // Collection of multiple states (one per column)
-    using rplqStateCollection = std::vector<rplqState> ;
-    //     Eigen::Matrix<
-    //     pinocchio::Model::Scalar,  // matches Scalar type from Pinocchio model
-    //     Eigen::Dynamic,
-    //     Eigen::Dynamic,
-    //     pinocchio::Model::Options  // matches storage order from Pinocchio model
-    // >;
-    using rplspatialPose =  pinocchio::SE3Tpl<pinocchio::Model::Scalar, pinocchio::Model::Options>;
-    // Collection of poses (per-object), matching Pinocchio's style:
-    using rplspatialPoseCollection = std::vector<rplspatialPose>;
+//typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Options> VectorXs;
+//typedef VectorXs ConfigVectorType;
+using rplState = pinocchio::Model::ConfigVectorType;
 
-    using rplGeomIndex = std::size_t;
+using rplspatialPose =  pinocchio::SE3Tpl<pinocchio::Model::Scalar, pinocchio::Model::Options>;
+// Collection of poses (per-object), matching Pinocchio's style:
+using rplspatialPoseCollection = std::vector<rplspatialPose>;
 
-    using rplNodeIndex = std::size_t ; 
+using rplGeomIndex = std::size_t;
 
-    using rplNodeName = std::string;
+using rplNodeIndex = std::size_t ; 
 
-    template <typename T>
-    using rbPlCollection = std::vector<T>;
+using rplNodeName = std::string;
 
-    template <typename T> 
-    using rPlUnorderedSet = std::unordered_set<T>;
+using rplUnSignedInt = std::size_t;
 
-    template <typename T, typename Q>
-    using rPlUnorderedMap = std::unordered_map<T,Q>;
+template <typename T>
+using rplStlCollection = std::vector<T>;
 
-    template <typename T>
-    using rplUniquePtr = std::unique_ptr<T>;
+template <typename T>
+using rplStl2dCollection = std::vector<std::vector<T>>;
 
-    template <typename T>
-    using rplSharedPtr = std::shared_ptr<T>;
+template <typename T>
+using rplCollection = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
-    template <typename T>
-    using rplwkPtr = std::weak_ptr<T>;
+template <typename T> 
+using rPlUnorderedSet = std::unordered_set<T>;
 
-    template <typename T>
-    using rplOpt = std::optional<T>;
+template <typename T, typename Q>
+using rPlUnorderedMap = std::unordered_map<T,Q>;
+
+template <typename T>
+using rplUniquePtr = std::unique_ptr<T>;
+
+template <typename T>
+using rplSharedPtr = std::shared_ptr<T>;
+
+template <typename T>
+using rplwkPtr = std::weak_ptr<T>;
+
+template <typename T>
+using rplOpt = std::optional<T>;
 
 
-}
+

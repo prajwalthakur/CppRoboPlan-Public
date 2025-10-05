@@ -47,7 +47,7 @@ int main()
 
 
     // generate the #dim seed vector for generating the random Joint angles 
-    std::vector<std::size_t> seedVector = cpproboplan::generateRandomSeed(plannerOptions.rng_seed, model.lowerPositionLimit.size());
+    rplCollection<rplUnSignedInt> seedVector = cpproboplan::generateRandomSeed(plannerOptions.rng_seed, model.lowerPositionLimit.size());
     
     // create the random vector generator
     cpproboplan::crRandVecGenerator<double> randomVecGenerator = \
@@ -79,7 +79,7 @@ int main()
                                                                         randomVecGenerator);
     if(!isSamplingSuccess1 || !isSamplingSuccess2)
     {
-        std::cerr<<" couldnt generate a collision free samples"<<std::endl;
+        std::cerr<<" Couldn't generate a collision free samples"<<std::endl;
     }
     else
     {
@@ -87,13 +87,11 @@ int main()
 
     }
 
-    std::vector<double> startPose(qStartPose.data(),qStartPose.data()+qStartPose.size());
-    std::vector<double> goalPose(qGoalPose.data(),qGoalPose.data()+qGoalPose.size());
-    
-    std::this_thread::sleep_for(std::chrono::duration<double>(10));
+    std::cerr << " press Enter to  start planning" << std::endl;
+    cpproboplan::crWaitForKeyPress();
 
     // sove the path planning problem
-    bool isSolved = RRTPlanner.solve(startPose, goalPose);
+    bool isSolved = RRTPlanner.solve(qStartPose, qGoalPose);
 
     if(!isSolved)
     {
@@ -109,35 +107,36 @@ int main()
     
 
     auto result = RRTPlanner.getResult();
-    std::vector<std::vector<double>>  solPath = result.path;
+    rplStlCollection<rplState>  solPath = result.path;
     bool isFoundPath = result.isSuccess;
     double cost = result.cost;
     
-    std::cerr<< " Path size :"<< solPath.size() << std::endl;
-    std::cerr<<"total Euclid distance in Joint Space: "<< cost << std::endl;
+    std::cerr << "number of Joints in Path : " << solPath.size() << std::endl;
+    std::cerr << "Total Euclidean distance in joint space: " << cost << std::endl;
 
-
-    
-    
     //mVis.showStartAndGoalEEPose(qStartPose,qGoalPose);
     //std::this_thread::sleep_for(std::chrono::duration<double>(10));
     std::shared_ptr<Meshcat> meshcatPointer = mVis.getMeshcatPtr();
-    meshcatPointer->StartRecording();
-    meshcatPointer->PublishRecording();
-    for(int i=0;i<solPath.size();++i)
+    //meshcatPointer->StartRecording();
+    //meshcatPointer->PublishRecording();
+    /**
+     * @brief Step through the solution in the viewer, waiting for ENTER at each waypoint.
+     * @details Each iteration maps a waypoint to an Eigen config vector for the visualizer.
+    */
+    for (int i = 0; i < static_cast<int>(solPath.size()); ++i)
     {
-        mVis.stepSim(Eigen::Map<pin::Model::ConfigVectorType>(solPath[i].data(),solPath[i].size()) );
-        std::cerr<<" iteration "<< i << std::endl;
+        mVis.stepSim(solPath[i]);
+        std::cerr << "iteration " << i << std::endl;
+        std::cerr << "Press ENTER to step to next joint..." << std::endl;
+        cpproboplan::crWaitForKeyPress();
     }
-    meshcatPointer->StopRecording();
+    std::cerr<< " goal reached; press Enter to end "<<std::endl;
+    cpproboplan::crWaitForKeyPress();;
 
+    //meshcatPointer->StopRecording();
     //meshcatPointer->PublishRecording();
     std::this_thread::sleep_for(std::chrono::duration<double>(20));
     // std::string html = meshcatPointer->get_recording();
 
-    // // Write to file
-    // std::ofstream out("/root/workspace/src/examples/RRTPlanner/exmple");
-    // out << html;
-    // out.close();
     return 0;
 }

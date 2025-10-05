@@ -39,7 +39,7 @@ namespace cpproboplan
         std::size_t mSeed;
 
         // Initial value for the random number generator
-        T mMin = std::numeric_limits<T>::max();
+        T mMin = std::numeric_limits<T>::min();
         T mMax = std::numeric_limits<T>::max();
         T mMean = std::numeric_limits<T>::infinity();
         crRandomType mType = crRandomType::R_NONE;
@@ -55,6 +55,6 @@ namespace cpproboplan
     };
 
 
-} 
+} // namespace cpproboplan
 
 #include "Random.tpp"

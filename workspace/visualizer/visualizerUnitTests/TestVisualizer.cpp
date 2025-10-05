@@ -54,7 +54,7 @@ public:
         // 4) Initialize planner options (member)
         mPlannerOptions = cpproboplan::planner::RRTPlannerOptions{};
 
-        std::vector<std::size_t> seedVector = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, model.lowerPositionLimit.size());
+        rplCollection<rplUnSignedInt> seedVector = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, model.lowerPositionLimit.size());
         
         mRandomVecGenerator = cpproboplan::crCreateRandVecGenerator(mPlannerOptions.distribution_type, 
         seedVector,model, mPlannerOptions.joint_limit_padding);

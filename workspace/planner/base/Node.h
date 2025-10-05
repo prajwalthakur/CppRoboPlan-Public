@@ -30,7 +30,7 @@ namespace cpproboplan::planner
              * @param data The state data as a vector of Q.
              * @param parent A raw pointer to the parent node.
              */
-            plNode(rplSharedPtr<plStateSpace<T,Q>>& ss, std::vector<Q> data, plNode<T,Q>* parent = nullptr) :
+            plNode(rplSharedPtr<plStateSpace<T,Q>>& ss, rplCollection<Q> data, plNode<T,Q>* parent = nullptr) :
                 mStateSpace(ss), mParentPtr(parent)
             {
                 mStatePtr = mStateSpace->allocateState();
@@ -48,9 +48,9 @@ namespace cpproboplan::planner
              * @brief Gets the state data.
              * @return A copy of the state data vector.
              */
-            std::vector<Q> getState()
+            rplCollection<Q> getState()
             {
-                std::vector<Q> data = mStatePtr->getState(); 
+                rplCollection<Q> data = mStatePtr->getState(); 
                 return data;
             }
             
@@ -60,7 +60,7 @@ namespace cpproboplan::planner
              * @brief Gets a reference to the state data.
              * @return A modifiable reference to the state data vector.
              */
-            std::vector<Q>& getStateRef()
+            const rplCollection<Q>& getStateRef() const
             {
                 return mStatePtr->getStateRef();
             }            
@@ -70,7 +70,7 @@ namespace cpproboplan::planner
              * @brief Gets a pointer to the parent node.
              * @return A raw pointer to the parent node.
              */
-            plNode* getParent()
+            const plNode* getParent() const
             {
                 return mParentPtr;
             }
@@ -81,7 +81,7 @@ namespace cpproboplan::planner
              * @brief Sets the state data.
              * @param data The new state data as a vector.
              */
-            void setData(std::vector<Q> data)
+            void setData(rplCollection<Q> data)
             {
                 mStatePtr->setState(data);
             }

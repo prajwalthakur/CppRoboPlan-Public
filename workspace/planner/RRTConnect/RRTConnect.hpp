@@ -35,10 +35,15 @@ namespace cpproboplan::planner
         
         public : 
             /**
-             * @brief Default constructor for the RRT-Connect planner.
+             * @brief Default constructor for the RRTConnect planner.
              */
-            RRTConnect();
-            
+            RRTConnect()=default;
+
+            /**
+             * @brief Default destructor for the RRTConnect planner.
+            */
+            ~RRTConnect()=default;
+
             /**
              * @brief Parameterized constructor for the RRT-Connect planner.
              * @param spaceType The type of planning space (joint or Euclidean).
@@ -52,27 +57,22 @@ namespace cpproboplan::planner
             const RRTConPlannerOptions& plannerOptions);
             
             /**
-             * @brief Destructor for the RRT-Connect planner.
-             */
-            ~RRTConnect();
-            
-            /**
              * @brief Sets the maximum number of samples to generate.
              * @param maxSamplingNum The maximum number of samples.
              */
-            void setMaxSamplingNum(const std::size_t maxSamplingNum);
+            //void setMaxSamplingNum(const std::size_t maxSamplingNum);
 
             /**
              * @brief Sets the goal sampling rate.
              * @param goalSamplingRate The probability of sampling the goal node.
              */
-            void setGoalSamplingRate(double goalSamplingRate);
+            //void setGoalSamplingRate(double goalSamplingRate);
 
             /**
              * @brief Sets the expansion distance for extending the tree.
              * @param expandDist The distance by which to extend a new node from its nearest neighbor.
              */
-            void setExpandDist(double expandDist);
+            //void setExpandDist(double expandDist);
 
             /**
              * @brief Extends a node in one of the RRTs towards a given node.
@@ -82,7 +82,7 @@ namespace cpproboplan::planner
              * @param node The node to extend towards.
              * @return true if the node was successfully extended, false otherwise.
              */
-            bool extendNode(plSharedNodePtr parentNode, plSharedNodePtr node);
+            bool extendNode(const plSharedNodePtr& parentNode, const plSharedNodePtr& node);
 
             /**
              * @brief Connects a node to a different tree.
@@ -92,7 +92,7 @@ namespace cpproboplan::planner
              * @param node The node in the other tree.
              * @return true if a successful connection is made, false otherwise.
              */
-            bool ConnectNode(plSharedNodePtr parentNode, plSharedNodePtr node);
+            bool ConnectNode(const plSharedNodePtr& parentNode, const plSharedNodePtr& node);
 
             /**
              * @brief Solves the planning problem from a start to a goal pose.
@@ -101,8 +101,7 @@ namespace cpproboplan::planner
              * @return true If a path is found.
              * @return false If a path is not found within the given constraints.
              */
-            bool solve(std::vector<double>& startPose, 
-            std::vector<double>& goalPose) override;
+            bool solve(const rplState& startPose, const rplState& goalPose) override;
 
         private:
             /**
@@ -120,12 +119,12 @@ namespace cpproboplan::planner
             pin::GeometryData mCollisionData; /**< Pinocchio robot collision data. */
             
             
-            std::shared_ptr<kdTreeType> mStartPhaseKdTree{nullptr}; /**< The KD-Tree for the start-tree. */
-            std::shared_ptr<kdTreeType> mGoalPhaseKdTree{nullptr}; /**< The KD-Tree for the goal-tree. */
+            rplSharedPtr<kdTreeType> mStartPhaseKdTree{nullptr}; /**< The KD-Tree for the start-tree. */
+            rplSharedPtr<kdTreeType> mGoalPhaseKdTree{nullptr}; /**< The KD-Tree for the goal-tree. */
             
             
-            std::shared_ptr<kdTreeType>  mCurrKdTreePtr{nullptr}; /**< A pointer to the tree currently being extended. */
-            std::shared_ptr<kdTreeType>  mOtherKdTreePtr{nullptr}; /**< A pointer to the other tree. */
+            rplSharedPtr<kdTreeType>  mCurrKdTreePtr{nullptr}; /**< A pointer to the tree currently being extended. */
+            rplSharedPtr<kdTreeType>  mOtherKdTreePtr{nullptr}; /**< A pointer to the other tree. */
 
             cpproboplan::crRandVecGenerator<double> mRandomVecGenerator; /**< Random vector generator for sampling. */
             cpproboplan::crRandomGenerator<double> mRandomNumGenerator; /**< Random number generator for goal biasing. */

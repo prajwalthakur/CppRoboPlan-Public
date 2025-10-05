@@ -30,7 +30,7 @@ namespace cpproboplan::planner
              * @brief Parameterized constructor for plStateSpace.
              * @param dim The dimension of the state space.
              */
-            plStateSpace(std::size_t dim):mDim(dim){}
+            plStateSpace(rplUnSignedInt dim):mDim(dim){}
 
             /**
              * @brief Default destructor for plStateSpace.
@@ -43,7 +43,7 @@ namespace cpproboplan::planner
              * @brief Sets the dimension of the state space.
              * @param dim The dimension to set.
              */
-            void setDimension(size_t dim){mDim = dim;}
+            void setDimension(rplUnSignedInt dim){mDim = dim;}
             
             //---------------------------------------------
 
@@ -61,7 +61,7 @@ namespace cpproboplan::planner
             }
 
         private:
-            std::size_t mDim{0}; /**< The dimension of the state space. */
+            rplUnSignedInt mDim{0}; /**< The dimension of the state space. */
     };
 
 }

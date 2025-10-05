@@ -3,11 +3,7 @@
 namespace cpproboplan::visualizer
 {
 
-    visJointTrajectory::visJointTrajectory()=default;
-    
-    visJointTrajectory::~visJointTrajectory()=default;
-
-    ///////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
     visJointTrajectory::visJointTrajectory(
                 const pin::Model& model,
@@ -26,9 +22,9 @@ namespace cpproboplan::visualizer
         init();
     }
 
-    ////////////////////////////
-    
-    void visJointTrajectory::addCoalBoxToMeshacat(const std::shared_ptr<coal::Box>& box, const pin::GeometryModel::GeometryObject& go )
+    ////////////////////////////////////////////////////////////////////////
+
+    void visJointTrajectory::addCoalBoxToMeshacat(const rplSharedPtr<coal::Box>& box, const pin::GeometryModel::GeometryObject& go )
     {
         mMeshCatPtr->SetObject("environment/" + go.name,
 
@@ -47,10 +43,10 @@ namespace cpproboplan::visualizer
         );
         mMeshCatPtr->SetTransform("environment/" + go.name, XPose);
     }
-    
-    ////////////////////////////
+        
+    ////////////////////////////////////////////////////////////////////////
 
-    void visJointTrajectory::addCoalSphereToMeshCat(const std::shared_ptr<coal::Sphere>& sphere, const pin::GeometryModel::GeometryObject& go)
+    void visJointTrajectory::addCoalSphereToMeshCat(const rplSharedPtr<coal::Sphere>& sphere, const pin::GeometryModel::GeometryObject& go)
     {
         mMeshCatPtr->SetObject("environment/" + go.name,
                                 drake::geometry::Sphere(sphere->radius),
@@ -66,8 +62,8 @@ namespace cpproboplan::visualizer
         );
         mMeshCatPtr->SetTransform("environment/" + go.name, XPose);
     }
-    
-    /////////////////////////
+        
+    ////////////////////////////////////////////////////////////////////////
 
     void visJointTrajectory::init()
     {
@@ -75,7 +71,7 @@ namespace cpproboplan::visualizer
         mSleepDuration = 1.0/mVisualRate;
         std::cerr << "Open in browser: " << mMeshCatPtr->web_url() << std::endl; // handy
         
-        // ----- Upload meshes to Meshcat once -----
+        //  Upload meshes to Meshcat once
         for (const auto& go : mVisualModel.geometryObjects) {
             if (!go.meshPath.empty()) {
             // Pinocchio stores an absolute mesh path + scale for mesh geometries.
@@ -103,24 +99,7 @@ namespace cpproboplan::visualizer
         mEEPath.clear();
     }
 
-    std::shared_ptr<Meshcat> visJointTrajectory::getMeshcatPtr()
-    {
-        return mMeshCatPtr;
-    }
-    
-    ///////////////////////////////////////////////////
-
-    void visJointTrajectory::setStartTime(const std::chrono::high_resolution_clock::time_point currTime)
-    {
-        mStartTime = std::chrono::duration<double>(currTime.time_since_epoch()).count();
-    }
-
-    double visJointTrajectory::elapsedTime(const std::chrono::high_resolution_clock::time_point currTime)
-    {
-        return std::chrono::duration<double>(currTime.time_since_epoch()).count() - mStartTime;
-    }
-
-    ///////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
     void visJointTrajectory::updateMeshcatTransforms() 
     {
@@ -135,9 +114,9 @@ namespace cpproboplan::visualizer
         }
     }
 
-    /////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
-    void visJointTrajectory::setStartJointPose(pin::Model::ConfigVectorType JointState)
+    void visJointTrajectory::setStartJointPose(const rplState& JointState)
     {
         pin::forwardKinematics(mPinModel, mData, JointState);
         pin::updateFramePlacements(mPinModel, mData);
@@ -145,9 +124,9 @@ namespace cpproboplan::visualizer
         updateMeshcatTransforms();
     }
 
-    ///////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
-    void visJointTrajectory::showStartAndGoalEEPose(pin::Model::ConfigVectorType startJointPose, pin::Model::ConfigVectorType goalJointPose)
+    void visJointTrajectory::showStartAndGoalEEPose(const rplState& startJointPose, const rplState& goalJointPose)
     {   
         int eeId = mPinModel.getFrameId(mVisualizerOptions.ee_frame_name);
         
@@ -167,12 +146,6 @@ namespace cpproboplan::visualizer
         // mMeshCatPtr->SetTransform("markers/start_ee", X_WStart);
         AddFrameAxes( "markers/start_axes", X_WStart,
                     /*axis_length=*/radius*3.0, /*axis_radius=*/radius*0.15);
-
-
-
-
-
-
         //std::cerr << "Start Frame " << eeId << " placement:\n" << MStart << std::endl;
         
         
@@ -195,12 +168,10 @@ namespace cpproboplan::visualizer
         // mMeshCatPtr->SetTransform("markers/goal_ee", X_WGoal);
         AddFrameAxes("markers/goal_axes", X_WGoal,
                     /*axis_length=*/radius*3.0, /*axis_radius=*/radius*0.15);
-
         return;
     }
 
-    
-    //////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
     void visJointTrajectory::updateEEPath()
     {
@@ -219,9 +190,9 @@ namespace cpproboplan::visualizer
         }
     }
 
-    //////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
-    void visJointTrajectory::stepSim(pin::Model::ConfigVectorType JointState)
+    void visJointTrajectory::stepSim(const rplState& JointState)
     {
 
         pin::forwardKinematics(mPinModel, mData, JointState);
@@ -233,9 +204,9 @@ namespace cpproboplan::visualizer
 
     }
 
-    ////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
-    void visJointTrajectory::stepSim(pin::Model::ConfigVectorType JointState, pin::Model::TangentVectorType JointSpeed)
+    void visJointTrajectory::stepSim(const rplState& JointState, pin::Model::TangentVectorType JointSpeed)
     {
 
         pin::forwardKinematics(mPinModel, mData, JointState,JointSpeed);
@@ -247,9 +218,9 @@ namespace cpproboplan::visualizer
 
     }
 
-    ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
-    void visJointTrajectory::stepSim(pin::Model::ConfigVectorType JointState, pin::Model::TangentVectorType JointSpeed, pin::Model::TangentVectorType Jointacc)
+    void visJointTrajectory::stepSim(const rplState& JointState, pin::Model::TangentVectorType JointSpeed, pin::Model::TangentVectorType Jointacc)
     {
 
         pin::forwardKinematics(mPinModel, mData, JointState,JointSpeed,Jointacc);
@@ -261,46 +232,70 @@ namespace cpproboplan::visualizer
 
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
     void visJointTrajectory::AddFrameAxes(
-                    const std::string& path,
-                    const drake::math::RigidTransform<double>& X_WF,
-                    double axis_length ,
-                    double axis_radius ) 
+            const std::string& path,
+            const drake::math::RigidTransformd& X_WF,
+            const double axis_length,
+            const double axis_radius)
     {
-        using drake::geometry::Cylinder;
-        using drake::geometry::Rgba;
-        const Eigen::Matrix3d R_WF = X_WF.rotation().matrix();
-        const Eigen::Vector3d p_WF = X_WF.translation();
+            using drake::geometry::Cylinder;
+            using drake::geometry::Rgba;
+            const Eigen::Matrix3d R_WF = X_WF.rotation().matrix();
+            const Eigen::Vector3d p_WF = X_WF.translation();
 
-        // X-axis: the cylinder’s +Z  is aligned with the EE’s +X.
-        {
-            Eigen::Matrix3d R_WC = R_WF*Eigen::AngleAxisd(+M_PI/2.0, Eigen::Vector3d::UnitY()).toRotationMatrix();;
-            Eigen::Vector3d p_WC = p_WF + R_WF * (Eigen::Vector3d::UnitX() * (axis_length/2.0));
-            drake::math::RigidTransform<double> X_(drake::math::RotationMatrix<double>(R_WC), p_WC);   
-            mMeshCatPtr->SetObject(path + "/x_axis", Cylinder(axis_radius, axis_length), Rgba(1,0,0,1));
-            mMeshCatPtr->SetTransform(path + "/x_axis", X_);
+            // X-axis: the cylinder’s +Z  is aligned with the EE’s +X.
+            {
+                Eigen::Matrix3d R_WC = R_WF*Eigen::AngleAxisd(+M_PI/2.0, Eigen::Vector3d::UnitY()).toRotationMatrix();;
+                Eigen::Vector3d p_WC = p_WF + R_WF * (Eigen::Vector3d::UnitX() * (axis_length/2.0));
+                drake::math::RigidTransform<double> X_(drake::math::RotationMatrix<double>(R_WC), p_WC);   
+                mMeshCatPtr->SetObject(path + "/x_axis", Cylinder(axis_radius, axis_length), Rgba(1,0,0,1));
+                mMeshCatPtr->SetTransform(path + "/x_axis", X_);
+            }
+
+            // Y-axis: the cylinder’s +Z  is aligned with the EE’s +Y.
+            {
+                Eigen::Matrix3d R_WC = R_WF *
+                    Eigen::AngleAxisd(-M_PI/2.0, Eigen::Vector3d::UnitX()).toRotationMatrix();
+                Eigen::Vector3d p_WC = p_WF + R_WF * (Eigen::Vector3d::UnitY() * (axis_length/2.0));
+                drake::math::RigidTransform<double> Y_(drake::math::RotationMatrix<double>(R_WC), p_WC); 
+                mMeshCatPtr->SetObject(path + "/y_axis", Cylinder(axis_radius, axis_length), Rgba(0,1,0,1)); 
+                mMeshCatPtr->SetTransform(path + "/y_axis", Y_);
+            }
+
+            // Z-axis: cylinder already along local +Z
+            {
+                Eigen::Matrix3d R_WC = R_WF;
+                Eigen::Vector3d p_WC = p_WF + R_WF * (Eigen::Vector3d::UnitZ() * (axis_length/2.0));
+                drake::math::RigidTransform<double> Z_(drake::math::RotationMatrix<double>(R_WC), p_WC); 
+                mMeshCatPtr->SetObject(path + "/z_axis", Cylinder(axis_radius, axis_length), Rgba(0,0,1,1));
+                mMeshCatPtr->SetTransform(path + "/z_axis", Z_);
+            }
         }
 
-        // Y-axis: the cylinder’s +Z  is aligned with the EE’s +Y.
-        {
-            Eigen::Matrix3d R_WC = R_WF *
-                Eigen::AngleAxisd(-M_PI/2.0, Eigen::Vector3d::UnitX()).toRotationMatrix();
-            Eigen::Vector3d p_WC = p_WF + R_WF * (Eigen::Vector3d::UnitY() * (axis_length/2.0));
-            drake::math::RigidTransform<double> Y_(drake::math::RotationMatrix<double>(R_WC), p_WC); 
-            mMeshCatPtr->SetObject(path + "/y_axis", Cylinder(axis_radius, axis_length), Rgba(0,1,0,1)); 
-            mMeshCatPtr->SetTransform(path + "/y_axis", Y_);
-        }
 
-        // Z-axis: cylinder already along local +Z
-        {
-            Eigen::Matrix3d R_WC = R_WF;
-            Eigen::Vector3d p_WC = p_WF + R_WF * (Eigen::Vector3d::UnitZ() * (axis_length/2.0));
-            drake::math::RigidTransform<double> Z_(drake::math::RotationMatrix<double>(R_WC), p_WC); 
-            mMeshCatPtr->SetObject(path + "/z_axis", Cylinder(axis_radius, axis_length), Rgba(0,0,1,1));
-            mMeshCatPtr->SetTransform(path + "/z_axis", Z_);
-        }
+
+
+    ////////////////////////////////////////////////////////////////////////
+
+    rplSharedPtr<Meshcat> visJointTrajectory::getMeshcatPtr()
+    {
+        return mMeshCatPtr;
+    }  
+
+    ////////////////////////////////////////////////////////////////////////
+
+    void visJointTrajectory::setStartTime(const std::chrono::high_resolution_clock::time_point currTime)
+    {
+        mStartTime = std::chrono::duration<double>(currTime.time_since_epoch()).count();
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+
+    double visJointTrajectory::elapsedTime(const std::chrono::high_resolution_clock::time_point currTime)
+    {
+        return std::chrono::duration<double>(currTime.time_since_epoch()).count() - mStartTime;
     }
 
 

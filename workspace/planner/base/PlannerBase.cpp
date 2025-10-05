@@ -3,31 +3,142 @@
 namespace cpproboplan::planner
 {
 
-    //-----------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
+    
+    PlannerBase::PlannerBase(const rplUnSignedInt dim):
+        mDim{dim}
+        {
+            mResult.init();
+        };
     
     /**
      * @brief Sets the start time for measuring elapsed duration.
      * @param start The starting time point.
      */
-    void PlannerBase::setStartTime(const std::chrono::high_resolution_clock::time_point& start)
+    void PlannerBase::setStartTime(const std::chrono::high_resolution_clock::time_point start)
     {
         mStartTime = start;
     }
 
-    //-------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Calculates the time elapsed since the start time was set.
      * @param currTime The current time point.
      * @return The elapsed time in seconds.
      */
-    double PlannerBase::getElapsedTime(const std::chrono::high_resolution_clock::time_point& currTime)
+    double PlannerBase::getElapsedTime(const std::chrono::high_resolution_clock::time_point currTime)
     {
         std::chrono::duration<double> duration = std::chrono::duration_cast<std::chrono::duration<double>>(currTime-mStartTime);
         return duration.count();
     }
 
-    //-----------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * @brief Generates a steered node.
+     * * This function modifies the `goalNode`'s state to be at a maximum distance
+     * `max_connection_dist` from the `startNode`. If the original distance is
+     * less than this maximum, no changes are made.
+     * @param startNode The starting node.
+     * @param goalNode The node to be steered.
+     * @param max_connection_dist The maximum distance to steer.
+     */
+    void PlannerBase::generateSteerNode(const plSharedNodePtr& startNode, const plSharedNodePtr& goalNode, const double max_connection_dist)
+    {
+        auto qStart = startNode->getStateRef();
+        auto qEnd = goalNode->getStateRef();
+        double dist =  (qEnd - qStart ).norm();
+        if(dist<=max_connection_dist)
+        {
+            return;
+        }
+        qEnd = qStart + max_connection_dist*(qEnd- qStart)/dist;
+        goalNode->setData(qEnd);
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @brief Reconstructs the path from the final node and populates the result struct.
+     * * This function traces the parent pointers from the final node back to the start node
+     * to reconstruct the path. It also calculates the total path cost and updates the
+     * `plResult` member.
+     * @param finalNode A raw pointer to the final node of the path.
+     * @param isPathFound A boolean flag indicating if a path was successfully found.
+     */
+    void PlannerBase::constructResult( const plNodeType* finalNode, const bool isPathFound)
+    {   
+        rplStlCollection<rplState> revPath;
+        auto node = finalNode;
+        while(node != nullptr)
+        {   
+            auto qState = node->getStateRef();
+            revPath.emplace_back(qState);
+            node = node->getParent();
+        }
+        
+        rplStlCollection<rplState> path;
+        rplUnSignedInt  sizePath = revPath.size();
+        path.resize(sizePath);
+        double cost = 0.0;
+        int j=0;
+        for(rplUnSignedInt i = sizePath ; i >0 ; --i )
+        {  
+            path[j] = revPath[i-1];
+            
+            if(j>0 && j<sizePath)
+            {  
+                cost += cpproboplan::distancemetric::Euclidean::calcDistance(path[j-1],path[j]);
+            }
+            ++j;
+        }
+        mResult.path = std::move(path);
+        mResult.cost  =  cost;
+        mResult.isSuccess = isPathFound;
+
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @brief Post-processes the path by discretizing long segments.
+     * * This function iterates through the computed path and inserts new waypoints
+     * into any segment that is longer than the `max_connection_dist`. This is
+     * useful for ensuring a path is smooth or for subsequent operations that
+     * require a fine-grained path.
+     * @param max_connection_dist The maximum distance for each path segment.
+     */
+    void PlannerBase::postProcess(const double max_connection_dist)
+    {
+        rplStlCollection<rplState>& path = mResult.path;
+        int numPathSeg = path.size();
+        rplStlCollection<rplState> newPath;
+        bool isSubPathCollisionFree = false;
+        auto dist = 0.0;
+        int i=0;
+        for(; i < numPathSeg-1;++i )
+        {
+            rplState qStart = path[i];
+            rplState qEnd = path[i+1];
+            double dist =  (qEnd-qStart).norm();
+            if(dist <= max_connection_dist )
+            {
+                newPath.emplace_back(path[i]);
+                continue;
+            }
+            while(dist > max_connection_dist)
+            {
+                newPath.emplace_back(qStart);
+                qStart = qStart +  max_connection_dist*(qEnd-qStart)/dist;
+                dist =  (qEnd - qStart).norm();
+            }
+        }
+        newPath.emplace_back(path[i]);
+        mResult.path = std::move(newPath);
+    }
+
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Discretizes the path between two nodes and checks for collisions.
@@ -51,13 +162,13 @@ namespace cpproboplan::planner
         pin::GeometryModel& collisionModel, 
         pin::Data& data, 
         pin::GeometryData& collisionData, 
-        double max_step_size,
-        double collision_safety_margin,
-        bool stopAtFirstCollision )
+        const double max_step_size,
+        const double collision_safety_margin,
+        const bool stopAtFirstCollision )
         {
-            pin::Model::ConfigVectorType qStart = pin::Model::ConfigVectorType::Map(startNode->getState().data() , startNode->getState().size());
-            pin::Model::ConfigVectorType qEnd = pin::Model::ConfigVectorType::Map(goalNode->getState().data() , goalNode->getState().size());
-            std::vector<pin::Model::ConfigVectorType> qPath;
+            rplState qStart = startNode->getState();
+            rplState qEnd =  goalNode->getState();
+            rplStlCollection<rplState> qPath;
             bool isSubPathCollisionFree = false;
             while(true)
             {
@@ -71,7 +182,7 @@ namespace cpproboplan::planner
                 qStart = qStart +  max_step_size*(qEnd-qStart)/dist;
             }
 
-            isSubPathCollisionFree =  cpproboplan::crCheckCollisionAlongPath( model,
+            isSubPathCollisionFree =  cpproboplan::crIfCollFreePath( model,
                                         collisionModel,
                                         qPath,
                                         data,
@@ -81,107 +192,5 @@ namespace cpproboplan::planner
 
             return isSubPathCollisionFree;
         }
-        
-    //------------------------------------------------------
-    
-    /**
-     * @brief Reconstructs the path from the final node and populates the result struct.
-     * * This function traces the parent pointers from the final node back to the start node
-     * to reconstruct the path. It also calculates the total path cost and updates the
-     * `plResult` member.
-     * @param finalNode A raw pointer to the final node of the path.
-     * @param isPathFound A boolean flag indicating if a path was successfully found.
-     */
-    void PlannerBase::constructResult( plNodeType* finalNode, bool isPathFound)
-    {
-        std::vector<std::vector<double>> revPath;
-        auto node = finalNode;
-        while(node != nullptr)
-        {
-            revPath.emplace_back(node->getState());
-            node = node->getParent();
-        }
 
-        std::vector<std::vector<double>> path;
-        std::size_t  sizePath = revPath.size();
-        path.resize(sizePath);
-        double cost = 0.0;
-        int j=0;
-        for(int i = static_cast<int>(sizePath) - 1 ; i>=0 ; --i )
-        {
-            path[j] = revPath[i];
-            
-            if(j>0 && j<sizePath)
-            {
-                cost += cpproboplan::distancemetric::Euclidean::calcDistance(path[j-1],path[j]);
-            }
-            ++j;
-        }
-        mResult.path = std::move(path);
-        mResult.cost  =  cost;
-        mResult.isSuccess = isPathFound;
-    }
-
-    //----------------------------------------------------
-    
-    /**
-     * @brief Generates a steered node.
-     * * This function modifies the `goalNode`'s state to be at a maximum distance
-     * `max_connection_dist` from the `startNode`. If the original distance is
-     * less than this maximum, no changes are made.
-     * @param startNode The starting node.
-     * @param goalNode The node to be steered.
-     * @param max_connection_dist The maximum distance to steer.
-     */
-    void PlannerBase::generateSteerNode(plSharedNodePtr startNode, plSharedNodePtr goalNode, double max_connection_dist)
-    {
-        Eigen::Map<pin::Model::ConfigVectorType> qStart(startNode->getStateRef().data(), startNode->getStateRef().size());
-        Eigen::Map<pin::Model::ConfigVectorType> qEnd(goalNode->getStateRef().data() , goalNode->getStateRef().size());
-
-        double dist =  (qEnd-qStart).norm();
-        if(dist<=max_connection_dist)
-        {
-            return;
-        }
-        qEnd = qStart + max_connection_dist*(qEnd- qStart)/dist;
-    }
-    
-    //---------------------------------------------------
-
-    /**
-     * @brief Post-processes the path by discretizing long segments.
-     * * This function iterates through the computed path and inserts new waypoints
-     * into any segment that is longer than the `max_connection_dist`. This is
-     * useful for ensuring a path is smooth or for subsequent operations that
-     * require a fine-grained path.
-     * @param max_connection_dist The maximum distance for each path segment.
-     */
-    void PlannerBase::postProcess(double max_connection_dist)
-    {
-        std::vector<std::vector<double>>& path = mResult.path;
-        int numPathSeg = path.size();
-        std::vector<std::vector<double>> newPath;
-        bool isSubPathCollisionFree = false;
-        auto dist = 0.0;
-        int i=0;
-        for(; i <numPathSeg-1;++i )
-        {
-            Eigen::Map<pin::Model::ConfigVectorType> qStart(path[i].data(), path[i].size());
-            Eigen::Map<pin::Model::ConfigVectorType> qEnd(path[i+1].data() , path[i+1].size());
-            double dist =  (qEnd-qStart).norm();
-            if(dist <= max_connection_dist )
-            {
-                newPath.emplace_back(path[i]);
-                continue;
-            }
-            while(dist > max_connection_dist)
-            {
-                newPath.emplace_back(std::vector<double>(qStart.data(),qStart.data() + qStart.size()));
-                qStart = qStart +  max_connection_dist*(qEnd-qStart)/dist;
-                dist =  (qEnd-qStart).norm();
-            }
-        }
-        newPath.emplace_back(path[i]);
-        mResult.path = std::move(newPath);
-    }
-}
+} //namespace cpproboplan::planner

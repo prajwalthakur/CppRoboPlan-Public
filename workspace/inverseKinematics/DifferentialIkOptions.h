@@ -31,7 +31,8 @@ namespace cpproboplan::inverseKinematics
          * @param distribution_type sampling distribution name: to sample the random number/ vector
          * @param deltaTime integration time in seconds
          */
-        DifferentialIkOptions(
+        DifferentialIkOptions
+        (
             int max_iters = 200,
             int max_retries = 10,
             double max_translation_error = 1e-3,
@@ -48,21 +49,22 @@ namespace cpproboplan::inverseKinematics
             int max_tries = 1000,
             double collision_safety_margin = 0.05
         )
-            : max_iters(max_iters),
-            max_retries(max_retries),
-            max_translation_error(max_translation_error),
-            max_rotation_error(max_rotation_error),
-            damping(damping),
-            min_step_size(min_step_size),
-            max_step_size(max_step_size),
-            ignore_joint_indices(std::move(ignore_joint_indices)),
-            joint_weights(std::move(joint_weights)),
-            rng_seed(rng_seed),
-            joint_limit_padding(joint_limit_padding),
-            distribution_type(distribution_type),
-            deltaTime(deltaTime),
-            max_tries(max_tries),
-            collision_safety_margin(collision_safety_margin){}
+        : max_iters(max_iters),
+        max_retries(max_retries),
+        max_translation_error(max_translation_error),
+        max_rotation_error(max_rotation_error),
+        damping(damping),
+        min_step_size(min_step_size),
+        max_step_size(max_step_size),
+        ignore_joint_indices(std::move(ignore_joint_indices)),
+        joint_weights(std::move(joint_weights)),
+        rng_seed(rng_seed),
+        joint_limit_padding(joint_limit_padding),
+        distribution_type(distribution_type),
+        deltaTime(deltaTime),
+        max_tries(max_tries),
+        collision_safety_margin(collision_safety_margin){}
+    public:
         int max_iters;
         int max_retries;
         double max_translation_error;
@@ -80,8 +82,5 @@ namespace cpproboplan::inverseKinematics
         double collision_safety_margin;
 
     };
-
-
-
-}
+}//cpproboplan::inverseKinematics
 

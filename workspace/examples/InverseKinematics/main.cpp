@@ -90,7 +90,7 @@ int main()
     // std::cerr << "random seed " << plannerOptions.rng_seed << std::endl;
 
     /// Create a per-DOF seed vector used by the random joint sampler.
-    std::vector<std::size_t> seedVector =
+    rplCollection<rplUnSignedInt> seedVector =
         cpproboplan::generateRandomSeed(plannerOptions.rng_seed, model.lowerPositionLimit.size());
     
     /// Construct a random vector generator under joint limits (+ optional padding).
@@ -105,7 +105,7 @@ int main()
 
     
     // we will try to find Joint Vector of the goal, given initial guess as qStartPose
-    pin::Model::ConfigVectorType qGoalPose(9); ///< Desired goal pose in joint space
+    rplState qGoalPose(9); ///< Desired goal pose in joint space
     qGoalPose << 2.01141, 1.71381, 2.55119, -2.3794, 1.92879, 2.47939, -2.20627, 0.00275953, 0.0209803;
     bool isSamplingSuccess2 = true;
     // find the SE(3) pose of the qGoalPose
@@ -118,15 +118,15 @@ int main()
     // ignored frames
     std::vector<std::string> ignoredJointNames = {"panda_finger_joint1","panda_finger_joint2"};
     std::vector<std::size_t> ignoredJointIds;
-    std::cerr<<"indices of panda_joint1 " << model.getJointId("panda_joint1") << std::endl;
+    //std::cerr<<"indices of panda_joint1 " << model.getJointId("panda_joint1") << std::endl;
     for(auto frameName : ignoredJointNames)
     {
         ignoredJointIds.emplace_back(model.getJointId(frameName));
-        std::cerr<<"ignored joint indices : " << model.getJointId(frameName) << std::endl;
+        //std::cerr<<"ignored joint indices : " << model.getJointId(frameName) << std::endl;
     }
     
      
-    pin::Model::ConfigVectorType qStartPose(9); ///< 7 Panda joints + 2 finger joints (example)
+    rplState qStartPose(9); ///< 7 Panda joints + 2 finger joints (example)
     // Hard-coded start pose (assumed within limits):
     qStartPose << -1.99603, 1.4308, -1.12779, -2.29557, 1.78088, 3.11695, 1.0033, 0.0158568, 0.0343686;
     bool isSamplingSuccess1 = true;

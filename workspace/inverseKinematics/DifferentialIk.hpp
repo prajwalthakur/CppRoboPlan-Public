@@ -32,34 +32,61 @@ namespace cpproboplan::inverseKinematics
     {
 
         public:
-            DifferentialIk();
-        
-        
-            ~DifferentialIk();
-
+            // Constructor.
+            DifferentialIk()=default;
+            // Destructor.
+            ~DifferentialIk()=default;
+            /**
+             * @brief Construct a new Differential Ik object
+             * 
+             * @param model 
+             * @param data 
+             * @param collisionModel 
+             * @param collisionData 
+             * @param ikOptions 
+             */
             DifferentialIk(pin::Model& model, 
                     pin::Data& data, 
                     pin::GeometryModel& collisionModel,
                     pin::GeometryData& collisionData,
                     DifferentialIkOptions& ikOptions);
             
-            
+            /**
+             * @brief Construct a new Differential Ik object
+             * 
+             * @param model 
+             * @param collisionModel 
+             * @param ikOptions 
+             * @param qRef 
+             */
             DifferentialIk(pin::Model& model, 
                         pin::GeometryModel& collisionModel,
                         DifferentialIkOptions& ikOptions,
-                        pin::Model::ConfigVectorType& qRef);
-            
+                        rplState& qRef);
+            /**
+             * @brief Solve the inverse Kinematics problem.
+             * 
+             * @param targetFrame 
+             * @param targetPose 
+             * @param initSolutionJoint 
+             * @return true : If able to solve the ik problem provided the solutions.
+             * @return false 
+             */
             bool solve(const std::string& targetFrame, 
             const pin::SE3& targetPose, 
-            const std::optional<pin::Model::ConfigVectorType>& initSolutionJoint = std::nullopt );
+            const std::optional<rplState>& initSolutionJoint = std::nullopt );
             
-           pin::Model::ConfigVectorType getResult();
-            
-
+            /**
+             * @brief Get the Result of Ik problem.
+             * 
+             * @return pin::Model::ConfigVectorType 
+             */
+            rplState getResult();
+    
             private:
                 void init();
             
-                bool checkTeminationCondition( pin::Model::ConfigVectorType& guessJointVector);
+                bool checkTeminationCondition(rplState& guessJointVector);
                 
             private:
                pin::Model mPinModel;

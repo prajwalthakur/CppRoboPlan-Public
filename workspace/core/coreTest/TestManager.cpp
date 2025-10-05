@@ -5,7 +5,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int rplTestManager::pseudoMain(int argc_, char** argv_, cpproboplan::rplOpt<int> numRun)
+int rplTestManager::pseudoMain(int argc_, char** argv_, rplOpt<int> numRun)
 {
     instance().mNumRuns = numRun;
     return instance().runTests(argc_, argv_);

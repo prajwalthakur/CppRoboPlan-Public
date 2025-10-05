@@ -9,16 +9,7 @@ namespace pin = pinocchio;
 
 namespace cpproboplan::planner
 {
-    /**
-     * @brief Default constructor for the RRT planner.
-     */
-    RRT::RRT()=default;
-
-    /**
-     * @brief Default destructor for the RRT planner.
-     */
-    RRT::~RRT()=default;
-    
+   
     /**
      * @brief Parameterized constructor for the RRT planner.
      * @param spaceType The type of planning space (joint or Euclidean).
@@ -30,32 +21,33 @@ namespace cpproboplan::planner
     const pin::Model& model,
     const pin::GeometryModel& collisionModel, 
     const RRTPlannerOptions& plannerOptions):
+    BaseType(model.lowerPositionLimit.size()),
     mPlannerOptions(plannerOptions), 
     mPinModel(model), 
     mSpaceType(spaceType), 
     mData(mPinModel),
     mCollisionModel(collisionModel),
     mCollisionData(mCollisionModel),
-    PlannerBase(model.lowerPositionLimit.size()),
-    mKdTree(std::make_unique<kdTreeType>(getDim()))
+    mKdTree(std::make_unique<kdTreeType>(model.lowerPositionLimit.size()))
     {
         init();
     }
     
+    ////////////////////////////////////////////////////////////////////////
+
     /**
      * @brief Initializes the planner.
      * * This function sets up the random number generators, the state space, and the
      * KD-Tree for the RRT algorithm based on the provided planner options.
      */
     void RRT::init()
-    {
-        std::vector<std::size_t> seedVector = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, getDim());
+    {   
+        rplCollection<rplUnSignedInt> seedVector = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, getDim());
         
-        mRandomVecGenerator = cpproboplan::crCreateRandVecGenerator(mPlannerOptions.distribution_type, 
-        seedVector,mPinModel, mPlannerOptions.joint_limit_padding);
+        mRandomVecGenerator = cpproboplan::crCreateRandVecGenerator(mPlannerOptions.distribution_type, seedVector, mPinModel, mPlannerOptions.joint_limit_padding);
 
         // create a uniform random number  generator to sample the goal 
-        std::vector<std::size_t> seedForGoalBiasing = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, 1);
+        rplCollection<rplUnSignedInt> seedForGoalBiasing = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, 1);
         mRandomNumGenerator = cpproboplan::crCreateRandomGenerator(mPlannerOptions.distribution_type,seedForGoalBiasing[0],0.0,1.0);
 
         // Sample Space for RRT (Option: Joint Space or Euclidean Space)
@@ -65,6 +57,8 @@ namespace cpproboplan::planner
         } 
         mKdTree->setRebalanceRatioThreshold(2.0);
     }
+
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Solves the planning problem from a start to a goal pose.
@@ -76,7 +70,7 @@ namespace cpproboplan::planner
      * @return true If a path is found.
      * @return false If a path is not found within the given constraints.
      */
-    bool RRT::solve(std::vector<double>& startPose, std::vector<double>& goalPose)
+    bool RRT::solve(const rplState& startPose, const rplState& goalPose)
     {
         auto node     =     std::make_shared<plNodeType>(mPlStateSpacePtr, startPose);
         auto goalNode =     std::make_shared<plNodeType>(mPlStateSpacePtr, goalPose);
@@ -106,8 +100,8 @@ namespace cpproboplan::planner
             }
         }
 
-        std::pair<pin::Model::ConfigVectorType,bool> sampledResult;
-        pin::Model::ConfigVectorType qRandom;
+        std::pair<rplState,bool> sampledResult;
+        rplState qRandom;
         bool isSamplingSuccess = false;
         int  i = 0;
         setStartTime(std::chrono::high_resolution_clock::now());
@@ -117,7 +111,7 @@ namespace cpproboplan::planner
             ++i;
             if(mRandomNumGenerator.getRandomNumber() <= mPlannerOptions.goal_biasing_probability)
             {
-                qRandom = Eigen::Map<pin::Model::ConfigVectorType>(gl.data(), gl.size());
+                qRandom = gl ;
                 isSamplingSuccess = true;
             }
             else
@@ -133,10 +127,13 @@ namespace cpproboplan::planner
                 isSamplingSuccess  = sampledResult.second;
             }
 
-            if(!isSamplingSuccess){continue;}
+            if(!isSamplingSuccess)
+            {
+                continue;
+            }
             node.reset();
-            std::vector<double> stdVec(qRandom.data(),qRandom.data() + qRandom.size());
-            node = std::make_shared<plNodeType>(mPlStateSpacePtr, stdVec);
+            //std::vector<double> stdVec(qRandom.data(),qRandom.data() + qRandom.size());
+            node = std::make_shared<plNodeType>(mPlStateSpacePtr, qRandom );
             auto parentNode = mKdTree->searchNN(node);
             
             // extend function 
@@ -149,7 +146,10 @@ namespace cpproboplan::planner
                                     mPlannerOptions.max_step_size,
                                     mPlannerOptions.collision_safety_margin,
                                     true);
-            if(!isSubPathCollisionFree){continue;}
+            if(!isSubPathCollisionFree)
+            {
+                continue;
+            }
 
             node->setParent(parentNode.get());
             mKdTree->add(node);
@@ -172,6 +172,7 @@ namespace cpproboplan::planner
         {
             std::cerr<<"Path Found " << "time elapsed: "<< duration << " final euclid-distance to goal joint configuration:"<<dist<<std::endl;
         }
+
         constructResult(finalNode.get(), isPathFound);
 
         return isPathFound;

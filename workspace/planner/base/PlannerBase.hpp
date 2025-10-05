@@ -10,32 +10,32 @@ namespace cpproboplan::planner
     /**
      * @brief Type alias for a planning node using a JointState and double data type.
      */
-    using plNodeType            =          plNode<plJointState, double>;
+    using plNodeType= plNode<plJointState, double>;
 
     /**
      * @brief Type alias for a shared pointer to a plNodeType.
      */
-    using plSharedNodePtr     = cpproboplan::rplSharedPtr<plNode<plJointState, double>>;
+    using plSharedNodePtr= rplSharedPtr<plNode<plJointState, double>>;
 
     /**
      * @brief Type alias for a shared constant pointer to a plNodeType.
      */
-    using plSharedConstNodePtr = cpproboplan::rplSharedPtr<const plNode<plJointState, double>>;
+    using plSharedConstNodePtr= rplSharedPtr<const plNode<plJointState, double>>;
 
     /**
      * @brief Type alias for a shared pointer to a JointState-based state space.
      */
-    using plSharedStateSpacePtrF = cpproboplan::rplSharedPtr<plStateSpace<plJointState, double>>;
+    using plSharedStateSpacePtrF= rplSharedPtr<plStateSpace<plJointState, double>>;
     
     /**
      * @brief Type alias for a KD-Tree of plJointState and double types.
      */
-    using kdTreeType = plKdTree<plJointState,double>;
+    using kdTreeType= plKdTree<plJointState,double>;
 
     /**
      * @brief Type alias for a unique pointer to a kdTreeType.
      */
-    using kdTreeUniquePtr        =  cpproboplan::rplUniquePtr<kdTreeType>;
+    using kdTreeUniquePtr=  rplUniquePtr<kdTreeType>;
 
     /**
      * @enum plSpaceType
@@ -53,14 +53,15 @@ namespace cpproboplan::planner
      */
     struct plResult
     {
-        std::vector<std::vector<double>> path; /**< The computed path as a sequence of state vectors. */
+        rplStlCollection<rplState> path; /**< The computed path as a sequence of state vectors. */
         double cost{0.0}; /**< The cost of the computed path. */
         bool isSuccess{false}; /**< Flag indicating whether a path was successfully found. */
         
         /**
          * @brief Initializes the result struct by clearing all data.
          */
-        void init(){
+        void init()
+        {
             path.clear();
             cost = 0.0;
             isSuccess = false;
@@ -81,13 +82,11 @@ namespace cpproboplan::planner
              * @brief Default constructor.
              */
             PlannerBase() =default;
-
             /**
              * @brief Parameterized constructor.
              * @param dim The dimension of the planning space.
              */
-            PlannerBase(const std::size_t &dim):mDim{dim}{mResult.init();};
-
+            PlannerBase(const rplUnSignedInt dim);
             /**
              * @brief Virtual destructor to ensure proper cleanup of derived classes.
              */
@@ -102,14 +101,14 @@ namespace cpproboplan::planner
              * @brief Sets the start time for duration calculation.
              * @param start The starting time point.
              */
-            void setStartTime(const std::chrono::high_resolution_clock::time_point& start);
+            void setStartTime(const std::chrono::high_resolution_clock::time_point start);
             
             /**
              * @brief Finds the time elapsed since the start time.
              * @param currTime The current time point.
              * @return The elapsed time in seconds as a double.
              */
-            double getElapsedTime(const std::chrono::high_resolution_clock::time_point& currTime);
+            double getElapsedTime(const std::chrono::high_resolution_clock::time_point currTime);
 
             /**
              * @brief Virtual base method to solve the planning problem.
@@ -118,7 +117,7 @@ namespace cpproboplan::planner
              * @param goalPose The goal position as a vector of doubles.
              * @return True if a solution is found, false otherwise.
              */
-            virtual bool solve(std::vector<double>& startPos, std::vector<double>& goalPose)=0;
+            virtual bool solve(const rplState& startPose, const rplState& goalPose)=0;
             
             /**
              * @brief Placeholder for setting the problem definition.
@@ -135,7 +134,10 @@ namespace cpproboplan::planner
              * @brief Gets the dimension of the planning space.
              * @return The dimension.
              */
-            std::size_t  getDim(){return mDim;}
+            rplUnSignedInt  getDim() const 
+            {
+                return mDim;
+            }
 
         protected:
             /**
@@ -146,25 +148,19 @@ namespace cpproboplan::planner
             * @param goalNode The destination node.
             * @param max_connection_dist The maximum distance for steering.
             */   
-            void generateSteerNode(plSharedNodePtr startNode, plSharedNodePtr goalNode, double max_connection_dist);
-            
-            /**
-            * @brief Placeholder for updating the parent of a node.
-            */
-            void updateParent(){}
-
+            void generateSteerNode(const plSharedNodePtr& startNode, const plSharedNodePtr& goalNode, const double max_connection_dist);
             /**
             * @brief Constructs the final path and fills the result struct.
             * @param finalNode A raw pointer to the final node of the found path.
             * @param isPathFound A boolean indicating if a path was successfully found.
             */
-            void constructResult(plNodeType* finalNode, bool isPathFound);
+            void constructResult(const plNodeType* finalNode, const bool isPathFound);
             
             /**
              * @brief Placeholder for a post-processing step.
              * @param max_connection_dist The maximum connection distance.
              */
-            void postProcess(double max_connection_dist);
+            void postProcess(const double max_connection_dist);
 
             /**
              * @brief Checks for collisions along a discretized path.
@@ -187,14 +183,17 @@ namespace cpproboplan::planner
                 pin::GeometryModel& collisionModel, 
                 pin::Data& data, 
                 pin::GeometryData& collisionData, 
-                double max_step_size,
-                double collision_safety_margin,
-                bool stopAtFirstCollision ); 
+                const double max_step_size,
+                const double collision_safety_margin,
+                const bool stopAtFirstCollision ); 
 
             plResult mResult; /**< The result of the planning query. */
-
+            /**
+            * @brief Placeholder for updating the parent of a node.
+            */
+            void updateParent(){}
         private:
-            const std::size_t mDim{0}; /**< The dimension of the planning space. */
+            const rplUnSignedInt mDim{0}; /**< The dimension of the planning space. */
             std::chrono::high_resolution_clock::time_point mStartTime; /**< The start time point for timing calculations. */
     };
 }

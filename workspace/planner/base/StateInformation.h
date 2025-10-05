@@ -30,35 +30,35 @@ namespace cpproboplan::planner
              * @brief Parameterized constructor.
              * @param dim The dimension of the state vector.
              */
-            plState(std::size_t dim): mDim(dim){mState.resize(dim);}
+            plState(rplUnSignedInt dim): mDim(dim){mState.resize(dim);}
 
             /**
              * @brief Gets a copy of the state data.
              * @return A copy of the state vector.
              */
-            std::vector<T> getState() const { return mState; }
+            rplCollection<T> getState() const { return mState; }
 
             /**
              * @brief Gets a reference to the state data.
              * @return A modifiable reference to the state vector.
              */
-            std::vector<T>& getStateRef() {return mState;}
+            const rplCollection<T>& getStateRef() const {return mState;}
 
             /**
              * @brief Gets the dimension of the state.
              * @return The dimension of the state vector.
              */
-            std::size_t size() const { return mDim; }
+            rplUnSignedInt size() const { return mDim; }
 
             /**
              * @brief Sets the state data.
              * @param state The new state data vector.
              */
-            void setState(std::vector<T> state) {mState = state;}
+            void setState(rplCollection<T> state) {mState = state;}
 
         private:
-            std::size_t mDim; /**< The dimension of the state vector. */
-            std::vector<T> mState; /**< The state data. */
+            rplUnSignedInt mDim; /**< The dimension of the state vector. */
+            rplCollection<T> mState; /**< The state data. */
     };
 
     /**
@@ -69,7 +69,7 @@ namespace cpproboplan::planner
      * @tparam T The data type of the joint values.
      */
     template <typename T>
-    class plJointState:virtual public plState<T>
+    class plJointState : virtual public plState<T>
     {
         public:
             /**
@@ -86,7 +86,7 @@ namespace cpproboplan::planner
              * @brief Parameterized constructor.
              * @param dim The dimension of the joint space.
              */
-            plJointState(std::size_t dim):plState<T>(dim){return;};
+            plJointState(rplUnSignedInt dim): rplCollection<T>(dim){return;};
     };
 
     /**
@@ -114,6 +114,6 @@ namespace cpproboplan::planner
              * @brief Parameterized constructor.
              * @param dim The dimension of the Euclidean space.
              */
-            plEuclidState(std::size_t dim):plState<T>(dim){};
+            plEuclidState(rplUnSignedInt dim): plState<T>(dim){};
     };
 }

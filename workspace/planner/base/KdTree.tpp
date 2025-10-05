@@ -5,14 +5,15 @@ namespace cpproboplan::planner
      * @param dim The dimension of the state space.
      */
     template <template <typename> class T, typename Q>
-    plKdTree<T,Q>::plKdTree(const size_t dim):
-         mDim(dim),
-         mRoot(nullptr),
-         mDepth(0){
+    plKdTree<T,Q>::plKdTree(const rplUnSignedInt dim):
+            mDim(dim),
+            mRoot(nullptr),
+            mDepth(0)
+        {
             mStateSpacePtr = std::make_shared<plStateSpace<T,Q>>(dim);
-         }
+        }
     
-    //------------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////    
 
     /**
      * @brief Destructs the plKdTree.
@@ -29,7 +30,7 @@ namespace cpproboplan::planner
         mDepth = 0;
     }    
     
-    //--------------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Calculates the rebalance ratio of the tree.
@@ -45,7 +46,7 @@ namespace cpproboplan::planner
         return reRatio;
     }
     
-    //------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Adds a new node to the KD-Tree.
@@ -58,33 +59,32 @@ namespace cpproboplan::planner
     template <template <typename> class T, typename Q>
     void plKdTree<T,Q>::add( plSharedNodePtr node,plNodePtr parentPtr) 
     {
-        if(node->mParentPtr != nullptr){node->mParentPtr->isLeaf = false;}
+        if(node->mParentPtr != nullptr)
+            node->mParentPtr->isLeaf = false;
+        
         mPlNodes.push_back(node);
         mcalcRatio =  getRebalanceRatio();
         if( mcalcRatio >= REBALANCE_RATIO)
         {
             clearRec(mRoot);
             mDepth = 0;
-            std::vector<int> indices(mPlNodes.size());
-            std::iota(indices.begin(),indices.end(),0);
-            mRoot = buildRec(indices, 0 ,(int)mPlNodes.size(), 0, 0 );
+            rplCollection<rplUnSignedInt> indices = rplCollection<rplUnSignedInt>::LinSpaced(mPlNodes.size(), 0, mPlNodes.size() - 1);
+            buildRec(mRoot,indices, 0 , mPlNodes.size(), 0, 0 );
         }
         else
-        {
-            mRoot = insertRec(mRoot,mPlNodes.size()-1,0,0);
-        }
+            insertRec(mRoot,mPlNodes.size()-1,0,0);
+        
         mcalcRatio =  getRebalanceRatio();
         if( getRebalanceRatio() >= REBALANCE_RATIO)
         {
             clearRec(mRoot);
             mDepth = 0;
-            std::vector<int> indices(mPlNodes.size());
-            std::iota(indices.begin(),indices.end(),0);
-            mRoot = buildRec(indices, 0 ,(int)mPlNodes.size(), 0, 0 );
+            rplCollection<rplUnSignedInt> indices = rplCollection<rplUnSignedInt>::LinSpaced(mPlNodes.size(), 0, mPlNodes.size() - 1);
+            buildRec(mRoot, indices, 0 , mPlNodes.size(), 0, 0 );
         }
     }
 
-    //----------------------------------------------------
+   ////////////////////////////////////////////////////////////////////////
     
     /**
      * @brief Initializes the tree, clearing all nodes and resetting its state.
@@ -98,7 +98,7 @@ namespace cpproboplan::planner
         mKdTreeNodes.clear();
     }
 
-    //---------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Searches for the nearest neighbor of a given node.
@@ -116,7 +116,7 @@ namespace cpproboplan::planner
         return retNode;
     }
 
-    //--------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Searches for all neighbors within a specified radius.
@@ -126,14 +126,14 @@ namespace cpproboplan::planner
      */
     template <template <typename> class T, typename Q>
     std::vector<typename plKdTree<T,Q>::plSharedNodePtr>
-    plKdTree<T,Q>::searchNBHD(const plSharedNodePtr& node, const double& radius)
+    plKdTree<T,Q>::searchNBHD(const plSharedNodePtr& node, const double radius)
     {
-        std::vector<plSharedNodePtr> nearNodes;
+        rplCollection<plSharedNodePtr> nearNodes;
         searchNBHDRec(node, mRoot, nearNodes, radius);
         return nearNodes;
     }
     
-    //----------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Searches for all leaf nodes in the tree.
@@ -154,12 +154,17 @@ namespace cpproboplan::planner
         return ans;
     }
 
+    ////////////////////////////////////////////////////////////////////////
+
     /**
      * @brief Gets the dimension of the state space.
      * @return The dimension.
      */
     template <template <typename> class T, typename Q>
-    std::size_t plKdTree<T,Q>::getDim(){return mDim;}
+    std::size_t plKdTree<T,Q>::getDim()
+    {
+        return mDim;
+    }
 
     /**
      * @brief Gets a raw pointer to the root of the KD-Tree.
@@ -172,12 +177,17 @@ namespace cpproboplan::planner
         return mRoot.get();
     }
 
+    ////////////////////////////////////////////////////////////////////////
+
     /**
      * @brief Gets the current depth of the KD-Tree.
      * @return The depth.
      */
     template <template <typename> class T, typename Q>
-    int plKdTree<T,Q>::getDepth(){return mDepth;}
+    int plKdTree<T,Q>::getDepth()
+    {
+        return mDepth;
+    }
 
     /**
      * @brief Gets the planning node at a specified index.
@@ -186,24 +196,25 @@ namespace cpproboplan::planner
      */
     template <template <typename> class T, typename Q>
     typename plKdTree<T,Q>::plSharedNodePtr
-    plKdTree<T,Q>::getPlNodeAtindexi(std::size_t idx)
+    plKdTree<T,Q>::getPlNodeAtindexi(const rplUnSignedInt idx)
     {
         plSharedNodePtr node = mPlNodes[idx];
         return node;
     }
     
-    //----------------------------------------
+    ////////////////////////////////////////////////////////////////////////
+
     /**
      * @brief Sets the threshold for the rebalance ratio.
      * @param reRatio The new rebalance ratio threshold.
      */
     template <template <typename> class T, typename Q>
-    void plKdTree<T,Q>::setRebalanceRatioThreshold(double reRatio)
+    void plKdTree<T,Q>::setRebalanceRatioThreshold(const double reRatio)
     {
         REBALANCE_RATIO = reRatio;
     }
     
-    //--------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Recursively clears the KD-Tree structure.
@@ -218,7 +229,7 @@ namespace cpproboplan::planner
         kdNode.reset();
     }
 
-    //--------------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Recursively builds the KD-Tree from a set of indices.
@@ -233,20 +244,14 @@ namespace cpproboplan::planner
      * @return A unique pointer to the root of the newly built subtree.
      */
     template <template <typename> class T, typename Q>
-    kdUniqueNodePtr
-    plKdTree<T,Q>::buildRec(std::vector<int>& indices,
-        const int& offset, 
-        const int& nPoints, 
-        const int& depth,
-        const int& parentIdx)
+    void
+    plKdTree<T,Q>::buildRec(kdUniqueNodePtr& root, rplCollection<rplUnSignedInt>& indices, const rplUnSignedInt offset, const rplUnSignedInt nPoints, const rplUnSignedInt depth, const rplUnSignedInt parentIdx)
     {
        if(nPoints <= 0)
-       {
-            return nullptr;
-       }                   
+            return ;                  
        mDepth = std::max(depth,mDepth);      
-       const int axis = depth%mDim;
-       const int midIndex = 0 + ((nPoints - 1))/2;
+       const rplUnSignedInt axis = depth%mDim;
+       const rplUnSignedInt midIndex = 0 + ((nPoints - 1))/2;
        auto comp = [&](const int& lhs, const int& rhs)
        {
             const auto& lhsStateVal = mPlNodes[lhs]->getState();
@@ -254,16 +259,16 @@ namespace cpproboplan::planner
             return lhsStateVal[axis] < rhsStateVal[axis] ; 
        };
         std::nth_element(indices.begin()+offset, indices.begin()+offset + midIndex, indices.begin()+offset+nPoints,comp);
-        cpproboplan::planner::kdUniqueNodePtr node = std::make_unique<cpproboplan::planner::kdTreeNode>();
-        node->idx = indices[offset + midIndex];
-        node->parentIdx = parentIdx;
-        node->axis = axis;
-        node->child_l = buildRec(indices, offset , midIndex, depth+1, node->idx);
-        node->child_r = buildRec(indices,offset+midIndex+1, nPoints - (midIndex+1) ,depth+1,node->idx);
-        return node;
+        root = std::make_unique<cpproboplan::planner::kdTreeNode>();
+        root->idx = indices[offset + midIndex];
+        root->parentIdx = parentIdx;
+        root->axis = axis;
+        buildRec(root->child_l, indices, offset , midIndex, depth+1, root->idx);
+        buildRec(root->child_r, indices,offset+midIndex+1, nPoints - (midIndex+1) ,depth+1,root->idx);
+        return ;
     }
     
-    //------------------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Recursively inserts a new node into the KD-Tree.
@@ -274,21 +279,18 @@ namespace cpproboplan::planner
      * @return A unique pointer to the root of the modified subtree.
      */
     template <template <typename> class T, typename Q>
-    kdUniqueNodePtr
-    plKdTree<T,Q>::insertRec(kdUniqueNodePtr& root, 
-        const int& newNodeIndex, 
-        const int& depth,
-        const int& parentIdx)
+    void 
+    plKdTree<T,Q>::insertRec(kdUniqueNodePtr& root, const rplUnSignedInt newNodeIndex, const rplUnSignedInt depth, const rplUnSignedInt parentIdx)
     {
-        const int axis = depth%mDim;
+        const rplUnSignedInt axis = depth%mDim;
         if(root == nullptr)
         {
-            cpproboplan::planner::kdUniqueNodePtr node = std::make_unique<cpproboplan::planner::kdTreeNode>();
-            node->idx = newNodeIndex;
-            node->axis = axis;
-            node->parentIdx = parentIdx;
+            root = std::make_unique<cpproboplan::planner::kdTreeNode>();
+            root->idx = newNodeIndex;
+            root->axis = axis;
+            root->parentIdx = parentIdx;
             mDepth = std::max(depth,mDepth);
-            return std::move(node);
+            return ;
         }
         else
         {
@@ -296,17 +298,17 @@ namespace cpproboplan::planner
             const auto& rootNodeStateVal = mPlNodes[root->idx]->getState();
             if( newNodeStateVal[axis] < rootNodeStateVal[axis])
             {
-                root->child_l = insertRec(root->child_l, newNodeIndex, depth+1,root->idx);
+                insertRec(root->child_l, newNodeIndex, depth+1,root->idx);
             }
             else
             {
-                root->child_r = insertRec(root->child_r, newNodeIndex, depth+1,root->idx);
+               insertRec(root->child_r, newNodeIndex, depth+1,root->idx);
             }
-            return std::move(root);
+            return;
         }
     }
 
-    //------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Recursively searches for the nearest neighbor.
@@ -352,7 +354,7 @@ namespace cpproboplan::planner
         }
     }
 
-    //-------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Recursively searches for neighbors within a radius.
@@ -364,8 +366,8 @@ namespace cpproboplan::planner
     template <template <typename> class T, typename Q>
     void plKdTree<T,Q>::searchNBHDRec(const plSharedNodePtr& query, 
         const kdUniqueNodePtr& kdNode, 
-        std::vector<plSharedNodePtr>& nearNodes, 
-        const double& radius)const
+        const rplStlCollection<plSharedNodePtr>& nearNodes, 
+        const double radius)const
         {
             if(kdNode==nullptr){return;}
 

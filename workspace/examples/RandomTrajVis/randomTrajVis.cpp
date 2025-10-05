@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   // auto meshcat = std::make_shared<drake::geometry::Meshcat>("0.0.0.0", 7000);
   
   //auto meshcat = std::make_shared<Meshcat>();   // background server thread
-  std::cout << "Open in browser: " << meshcat->web_url() << std::endl; // handy
+  std::cerr << "Open in browser: " << meshcat->web_url() << std::endl; // handy
 
   // ----- Upload meshes to Meshcat once -----
   for (const auto& go : vmodel.geometryObjects) {

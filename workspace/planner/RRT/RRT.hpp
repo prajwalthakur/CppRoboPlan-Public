@@ -31,11 +31,12 @@ namespace cpproboplan::planner
      */
     class RRT : public PlannerBase
     {
+        using BaseType = PlannerBase;
         public : 
             /**
              * @brief Default constructor for the RRT planner.
              */
-            RRT();
+            RRT()=default;
             
             /**
              * @brief Parameterized constructor for the RRT planner.
@@ -52,25 +53,25 @@ namespace cpproboplan::planner
             /**
              * @brief Destructor for the RRT planner.
              */
-            ~RRT();
+            ~RRT()=default;
             
             /**
              * @brief Sets the maximum number of samples to generate.
              * * @param maxSamplingNum The maximum number of samples.
              */
-            void setMaxSamplingNum(const std::size_t maxSamplingNum);
+            //void setMaxSamplingNum(const std::size_t maxSamplingNum);
 
             /**
              * @brief Sets the goal sampling rate.
              * * @param goalSamplingRate The probability of sampling the goal node directly (0.0 to 1.0).
              */
-            void setGoalSamplingRate(double goalSamplingRate);
+            //void setGoalSamplingRate(double goalSamplingRate);
 
             /**
              * @brief Sets the expansion distance for extending the tree.
              * * @param expandDist The distance by which to extend a new node from its nearest neighbor.
              */
-            void setExpandDist(double expandDist);
+            //void setExpandDist(double expandDist);
 
             /**
              * @brief Solves the planning problem from a start to a goal pose.
@@ -79,8 +80,7 @@ namespace cpproboplan::planner
              * @return true If a path is found.
              * @return false If a path is not found within the given constraints.
              */
-            bool solve(std::vector<double>& startPose, 
-            std::vector<double>& goalPose) override;
+            bool solve(const rplState& startPose, const rplState& goalPose) override;
         
         private:
             /**

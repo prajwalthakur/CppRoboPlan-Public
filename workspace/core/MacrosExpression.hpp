@@ -8,7 +8,7 @@
 namespace cpproboplan
 {
 
-inline void checkQSize(const pinocchio::Model &model, const cpproboplan::rplqState &q) {
+inline void checkQSize(const pinocchio::Model &model, const rplState &q) {
     assert(q.rows() == model.nq && "q size mismatch with model.nq");
 }
 

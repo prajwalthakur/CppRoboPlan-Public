@@ -19,7 +19,7 @@
 #include "Node.h"
 #include "DistanceMetric.h"
 #include "StateSpaceInformation.h"
-
+#include "/root/workspace/src/core/core.h"
 namespace cpproboplan::planner
 {
     /**
@@ -40,13 +40,13 @@ namespace cpproboplan::planner
          * hierarchical structure.
          */
         int parentIdx{-1}; 
-        cpproboplan::rplUniquePtr<kdTreeNode> child_r{nullptr}; /**< Unique pointer to the right child. */
-        cpproboplan::rplUniquePtr<kdTreeNode> child_l{nullptr}; /**< Unique pointer to the left child. */
+        rplUniquePtr<kdTreeNode> child_r{nullptr}; /**< Unique pointer to the right child. */
+        rplUniquePtr<kdTreeNode> child_l{nullptr}; /**< Unique pointer to the left child. */
     };
 
     using kdNodePtr = kdTreeNode*; /**< A raw pointer to a kdTreeNode. */
-    using kdUniqueNodePtr = cpproboplan::rplUniquePtr<kdTreeNode>; /**< A unique pointer to a kdTreeNode. */
-    using kdWkNodePtr = cpproboplan::rplwkPtr<kdTreeNode>; /**< A weak pointer to a kdTreeNode. */
+    using kdUniqueNodePtr = rplUniquePtr<kdTreeNode>; /**< A unique pointer to a kdTreeNode. */
+    using kdWkNodePtr = rplwkPtr<kdTreeNode>; /**< A weak pointer to a kdTreeNode. */
 
     /**
      * @class plKdTree
@@ -63,9 +63,9 @@ namespace cpproboplan::planner
     {
         public:
             using plNodePtr =   plNode<T,Q>*; /**< Raw pointer type for a planning node. */
-            using plWkNodePtr = cpproboplan::rplwkPtr<plNode<T,Q>>; /**< Weak pointer type for a planning node. */
-            using plSharedNodePtr = cpproboplan::rplSharedPtr<plNode<T,Q>>; /**< Shared pointer type for a planning node. */
-            using plUniqueNodePtr = cpproboplan::rplUniquePtr<plNode<T,Q>>; /**< Unique pointer type for a planning node. */
+            using plWkNodePtr =  rplwkPtr<plNode<T,Q>>; /**< Weak pointer type for a planning node. */
+            using plSharedNodePtr = rplSharedPtr<plNode<T,Q>>; /**< Shared pointer type for a planning node. */
+            using plUniqueNodePtr = rplUniquePtr<plNode<T,Q>>; /**< Unique pointer type for a planning node. */
             
             plKdTree() = default; /**< Default constructor. */
 
@@ -73,7 +73,7 @@ namespace cpproboplan::planner
              * @brief Constructor for the KD-Tree.
              * @param dim The dimension of the state space.
              */
-            explicit plKdTree(const size_t dim);
+            explicit plKdTree(const rplUnSignedInt dim);
             
             /**
              * @brief Destructor for the KD-Tree.
@@ -109,13 +109,13 @@ namespace cpproboplan::planner
              * @param radius The radius to search within.
              * @return A vector of shared pointers to the found neighbor nodes.
              */
-            std::vector<plSharedNodePtr> searchNBHD(const plSharedNodePtr& node, const double& radius);
+            rplStlCollection<plSharedNodePtr> searchNBHD(const plSharedNodePtr& node, const double radius);
 
             /**
              * @brief Searches for all leaf nodes in the KD-Tree.
              * @return A vector of shared pointers to the leaf nodes.
              */
-            std::vector<plSharedNodePtr> searchLeafs();
+            rplStlCollection<plSharedNodePtr> searchLeafs();
 
             /**
              * @brief Gets the dimension of the state space.
@@ -140,7 +140,7 @@ namespace cpproboplan::planner
              * @param idx The index of the node in the internal `mPlNodes` vector.
              * @return A shared pointer to the planning node.
              */
-            plSharedNodePtr getPlNodeAtindexi(std::size_t idx);
+            plSharedNodePtr getPlNodeAtindexi(const rplUnSignedInt idx);
 
             /**
              * @brief Gets the rebalance ratio.
@@ -152,7 +152,7 @@ namespace cpproboplan::planner
              * @brief Sets the threshold for the rebalance ratio.
              * @param reRatio The new rebalance ratio threshold.
              */
-            void setRebalanceRatioThreshold(double reRatio);
+            void setRebalanceRatioThreshold(const double reRatio);
 
             double mcalcRatio{0.0};
 
@@ -160,11 +160,11 @@ namespace cpproboplan::planner
         private:
             double REBALANCE_RATIO{1.7}; /**< Threshold ratio for triggering a tree rebalance. */
             kdUniqueNodePtr mRoot{nullptr}; /**< Unique pointer to the root of the KD-Tree. */
-            std::vector<plSharedNodePtr> mPlNodes; /**< A vector of shared pointers to all planning nodes. */
-            std::vector<kdNodePtr> mKdTreeNodes; /**< A vector of raw pointers to the KD-Tree nodes. */
+            rplStlCollection<plSharedNodePtr> mPlNodes; /**< A vector of shared pointers to all planning nodes. */
+            rplStlCollection<kdNodePtr> mKdTreeNodes; /**< A vector of raw pointers to the KD-Tree nodes. */
             rplSharedPtr<plStateSpace<T,Q>> mStateSpacePtr; /**< Shared pointer to the state space information. */
-            int mDepth{0}; /**< Current depth of the KD-Tree. */
-            std::size_t mDim{0}; /**< Dimension of the state space. */
+            rplUnSignedInt mDepth{0}; /**< Current depth of the KD-Tree. */
+            rplUnSignedInt mDim{0}; /**< Dimension of the state space. */
             
         private:
             /**
@@ -173,28 +173,27 @@ namespace cpproboplan::planner
              * affect the planning nodes themselves.
              * @param node A unique pointer to the current node to be cleared.
              */
-            void clearRec(kdUniqueNodePtr & node);
+            void clearRec(kdUniqueNodePtr& node);
             
             /**
              * @brief Recursively builds the KD-Tree from scratch.
+             * @param root The unique pointer to the root of the current subtree.
              * @param indices A vector of indices to be included in the subtree.
              * @param offset The starting offset in the indices vector.
              * @param nPoints The number of points in the current subtree.
              * @param depth The current depth of the recursion.
              * @param parentIdx The index of the parent node.
-             * @return A unique pointer to the root of the newly built subtree.
              */
-            kdUniqueNodePtr buildRec(std::vector<int>& indices, const int& offset, const int& nPoints, const int& depth, const int& parentIdx);
-            
+            void buildRec(kdUniqueNodePtr& root, rplCollection<rplUnSignedInt>& indices, const rplUnSignedInt offset, const rplUnSignedInt nPoints, const rplUnSignedInt depth, const rplUnSignedInt parentIdx);
+        
             /**
              * @brief Recursively inserts a new node into the KD-Tree.
              * @param root The unique pointer to the root of the current subtree.
              * @param newNodeIndex The index of the new node to insert.
              * @param depth The current depth of the recursion.
              * @param idx The index of the current node in the `mKdTreeNodes` vector.
-             * @return A unique pointer to the root of the modified subtree.
              */
-            kdUniqueNodePtr insertRec(kdUniqueNodePtr& root, const int& newNodeIndex, const int& depth, const int& idx);
+            void insertRec(kdUniqueNodePtr& root, const rplUnSignedInt newNodeIndex, const rplUnSignedInt depth, const rplUnSignedInt idx);
             
             /**
              * @brief Recursively searches for the nearest neighbor.
@@ -214,7 +213,7 @@ namespace cpproboplan::planner
              * @param nearNodes A vector to store the found neighbors.
              * @param radius The search radius.
              */
-            void searchNBHDRec(const plSharedNodePtr& query, const kdUniqueNodePtr& node, std::vector<plSharedNodePtr>& nearNodes, const double& radius)const;
+            void searchNBHDRec(const plSharedNodePtr& query, const kdUniqueNodePtr& node, const rplStlCollection<plSharedNodePtr>& nearNodes, const double radius)const;
     };
 } // namespace cpproboplan::planner
     

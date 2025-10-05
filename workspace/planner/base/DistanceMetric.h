@@ -23,18 +23,15 @@ namespace cpproboplan::distancemetric
          * @return The Euclidean distance, or -1.0 if the vectors have different sizes.
          */
         template <typename T>
-        double calcDistance(const std::vector<T>& vec1, const std::vector<T>& vec2)
+        double calcDistance(const rplCollection<T>& vec1, const rplCollection<T>& vec2)
         {
             if (vec1.size() != vec2.size()) {
                 return -1.0; // or throw an exception
             }
 
             double ans = 0.0;
-            for (std::size_t i = 0; i < vec1.size(); ++i) {
-                double diff = static_cast<double>(vec1[i]) - static_cast<double>(vec2[i]);
-                ans += diff * diff;
-            }
-            return std::sqrt(ans);
+            double euclidDistance = (vec2-vec1).norm();
+            return euclidDistance;
         }
 
         /**
@@ -49,17 +46,17 @@ namespace cpproboplan::distancemetric
          * @return The projected Euclidean distance, or -1.0 if the vectors have different sizes.
          */
         template <typename T>
-        double calcProjDistance(const std::vector<T>& vec1, 
-            const std::vector<T>& vec2, int axis)
+        double calcProjDistance(const  rplCollection<T>& vec1, const  rplCollection<T>& vec2, int axis)
         {
             double ans =0.0;
             if(vec1.size()!=vec2.size())
-                {
-                    return -1.0;
-                }
-            double diff = static_cast<double>(vec1[axis]) - static_cast<double>(vec2[axis]);
-            ans += diff * diff;
-            return std::sqrt(ans);
+                return -1.0;
+            if(axis<0)
+                return -1.0;
+            
+            // convert to double to avoid integer truncation.
+            double diff = static_cast<double>(vec2[axis]) - static_cast<double>(vec1[axis]);
+            return std::abs(diff);
         }
     }
 }

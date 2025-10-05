@@ -9,16 +9,7 @@ namespace pin = pinocchio;
 
 namespace cpproboplan::planner
 {
-    /**
-     * @brief Default constructor for the RRTConnect planner.
-     */
-    RRTConnect::RRTConnect()=default;
 
-    /**
-     * @brief Default destructor for the RRTConnect planner.
-     */
-    RRTConnect::~RRTConnect()=default;
-    
     /**
      * @brief Parameterized constructor for the RRTConnect planner.
      * @param spaceType The type of planning space (joint or Euclidean).
@@ -42,7 +33,9 @@ namespace cpproboplan::planner
     {
         init();
     }
-    
+
+    ////////////////////////////////////////////////////////////////////////
+
     /**
      * @brief Initializes the planner.
      * * This function sets up the random number generators, state space, and the two KD-Trees
@@ -51,13 +44,13 @@ namespace cpproboplan::planner
     void RRTConnect::init()
     {
         
-        std::vector<std::size_t> seedVector = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, getDim());
+         rplCollection<rplUnSignedInt> seedVector = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, getDim());
         
         mRandomVecGenerator = cpproboplan::crCreateRandVecGenerator(mPlannerOptions.distribution_type, 
         seedVector,mPinModel, mPlannerOptions.joint_limit_padding);
 
         // create a uniform random number  generator to sample the goal 
-        std::vector<std::size_t> seedForGoalBiasing = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, 1);
+         rplCollection<rplUnSignedInt> seedForGoalBiasing = cpproboplan::generateRandomSeed(mPlannerOptions.rng_seed, 1);
         mRandomNumGenerator = cpproboplan::crCreateRandomGenerator(mPlannerOptions.distribution_type,seedForGoalBiasing[0],0.0,1.0);
 
         //sample Space for RRTConnect (Option: Joint Space or Euclidean Space)
@@ -71,7 +64,7 @@ namespace cpproboplan::planner
         mGoalPhaseKdTree->setRebalanceRatioThreshold(1.5);
     }
 
-    //-----------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Solves the planning problem from a start to a goal pose.
@@ -83,7 +76,7 @@ namespace cpproboplan::planner
      * @return true If a path is found.
      * @return false If a path is not found within the given constraints.
      */
-    bool RRTConnect::solve(std::vector<double>& startPose, std::vector<double>& goalPose)
+    bool RRTConnect::solve(const rplState& startPose, const rplState& goalPose)
     {
         auto node     =     std::make_shared<plNodeType>(mPlStateSpacePtr, startPose);
         auto goalNode =     std::make_shared<plNodeType>(mPlStateSpacePtr, goalPose);
@@ -113,8 +106,8 @@ namespace cpproboplan::planner
             }
         }
 
-        std::pair<pin::Model::ConfigVectorType,bool> sampledResult;
-        pin::Model::ConfigVectorType qRandom;
+        std::pair<rplState,bool> sampledResult;
+        rplState qRandom;
         bool isSamplingSuccess = false;
         int  i = 0;
         setStartTime(std::chrono::high_resolution_clock::now());
@@ -126,7 +119,7 @@ namespace cpproboplan::planner
         mOtherKdTreePtr = mGoalPhaseKdTree;
         std::string currentPhase = "start";
         std::shared_ptr<plNodeType> parentNode{nullptr};
-        while(!isPathFound &&  duration <=10)
+        while(!isPathFound &&  duration <=10.0)
         {
             mCurrKdTreePtr = (currentPhase=="start")? mStartPhaseKdTree: mGoalPhaseKdTree;
             mOtherKdTreePtr = (currentPhase=="start")? mGoalPhaseKdTree: mStartPhaseKdTree;
@@ -135,8 +128,7 @@ namespace cpproboplan::planner
             if(mRandomNumGenerator.getRandomNumber() <= mPlannerOptions.goal_biasing_probability)
             {
                 // if the current phase iteration is start then goalNode would the actual goal pose otherwise it's start Pose
-                qRandom = (currentPhase=="start")?Eigen::Map<pin::Model::ConfigVectorType>(gl.data(), gl.size()):
-                                                Eigen::Map<pin::Model::ConfigVectorType>(st.data(), st.size());
+                qRandom = (currentPhase=="start")?gl:st;
                 isSamplingSuccess = true;
             }
             else
@@ -152,17 +144,23 @@ namespace cpproboplan::planner
                 qRandom = sampledResult.first;
                 isSamplingSuccess  = sampledResult.second;
             }
-            if(!isSamplingSuccess){continue;}
+            if(!isSamplingSuccess)
+            {
+                continue;
+            }
 
             // delete the previously created node
             node.reset();
-            std::vector<double> stdVec(qRandom.data(),qRandom.data() + qRandom.size());
-            node = std::make_shared<plNodeType>(mPlStateSpacePtr, stdVec);
+            //std::vector<double> stdVec(qRandom.data(),qRandom.data() + qRandom.size());
+            node = std::make_shared<plNodeType>(mPlStateSpacePtr, qRandom);
             
             // extend function
             parentNode = mCurrKdTreePtr->searchNN(node) ; 
             isSubPathCollisionFree = extendNode(parentNode,node); // extend the node from parentNode to node and modify the node itself
-            if(!isSubPathCollisionFree){continue;}
+            if(!isSubPathCollisionFree)
+            {
+                continue;
+            }
             node->setParent(parentNode.get());
             mCurrKdTreePtr->add(node);
             auto stateVecCurrTree = node->getState();
@@ -170,7 +168,10 @@ namespace cpproboplan::planner
             // connect step
             parentNode = mOtherKdTreePtr->searchNN(node); // node is modifed to newNode which is a attached to currKdTree in extend function
             isSubPathCollisionFree = ConnectNode(parentNode,node); // extend the node from parentNode to node; its modify the node in place 
-            if(!isSubPathCollisionFree){continue;}            
+            if(!isSubPathCollisionFree)
+            {
+                continue;
+            }            
             node->setParent(parentNode.get());
             mOtherKdTreePtr->add(node);
             auto stateVecOtherTree = node->getState();
@@ -201,7 +202,8 @@ namespace cpproboplan::planner
         {
             std::cerr<<"Path Found " << "time elapsed: "<< duration << " final euclid-distance to goal joint configuration:"<<dist<<std::endl;
         }
-
+        
+        // Construct the result (i.e path).
         constructResult(finalNode.get(), isPathFound);
 
         if(mPlannerOptions.postProcess)
@@ -212,7 +214,7 @@ namespace cpproboplan::planner
         return isPathFound;
     }
 
-    //-----------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Extends a node towards a given target.
@@ -223,10 +225,12 @@ namespace cpproboplan::planner
      * @param node The node representing the target configuration.
      * @return true if the extended segment is collision-free, false otherwise.
      */
-    bool RRTConnect::extendNode(plSharedNodePtr parentNode, plSharedNodePtr node)
+    bool RRTConnect::extendNode(const plSharedNodePtr& parentNode, const plSharedNodePtr& goalNode)
     {
+        // generate a steer node from the parent node to node. Result stored in node.
+        auto node = goalNode;
         generateSteerNode(parentNode, node, mPlannerOptions.max_connection_dist);
-        bool isSubPathCollisionFree = discretizeAndCheckCollision(parentNode,node,mPinModel,
+        bool isSubPathCollisionFree = discretizeAndCheckCollision(parentNode, node, mPinModel,
                     mCollisionModel,
                     mData,
                     mCollisionData,
@@ -236,7 +240,7 @@ namespace cpproboplan::planner
         return isSubPathCollisionFree;
     }
     
-    //-----------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief Attempts to connect a node to the other tree.
@@ -247,11 +251,12 @@ namespace cpproboplan::planner
      * @param node The node from the current tree.
      * @return true if a successful connection is made, false otherwise.
      */
-    bool RRTConnect::ConnectNode(plSharedNodePtr parentNode, plSharedNodePtr node)
+    bool RRTConnect::ConnectNode(const plSharedNodePtr& parentNode, const plSharedNodePtr& goalNode)
     {   
-        Eigen::Map<pin::Model::ConfigVectorType> qStart(parentNode->getStateRef().data(), parentNode->getStateRef().size());
-        Eigen::Map<pin::Model::ConfigVectorType> qEnd(node->getStateRef().data() , node->getStateRef().size());
-        double dist =  (qEnd-qStart).norm();        
+        // Eigen::Map<pin::Model::ConfigVectorType> qStart(parentNode->getStateRef().data(), parentNode->getStateRef().size());
+        // Eigen::Map<pin::Model::ConfigVectorType> qEnd(node->getStateRef().data() , node->getStateRef().size());
+        auto node = goalNode;
+        double dist =  (node->getStateRef()-parentNode->getStateRef()).norm();        
         bool isSubPathCollisionFree = true;
         while ( dist > mPlannerOptions.max_connection_dist  && isSubPathCollisionFree )
         {
@@ -263,9 +268,10 @@ namespace cpproboplan::planner
                         mPlannerOptions.max_step_size,
                         mPlannerOptions.collision_safety_margin,
                         true);
-            dist =  (qEnd-qStart).norm();
+            dist =  (node->getStateRef()-parentNode->getStateRef()).norm();
         }
 
         return isSubPathCollisionFree;
     }
 }
+////////////////////////////////////////////////////////////////////////

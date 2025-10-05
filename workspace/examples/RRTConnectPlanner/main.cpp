@@ -95,7 +95,7 @@ int main()
     // std::cerr << "random seed " << plannerOptions.rng_seed << std::endl;
 
     /// Create a per-DOF seed vector used by the random joint sampler.
-    std::vector<std::size_t> seedVector =
+    rplCollection<rplUnSignedInt> seedVector =
         cpproboplan::generateRandomSeed(plannerOptions.rng_seed, model.lowerPositionLimit.size());
     
     /// Construct a random vector generator under joint limits (+ optional padding).
@@ -153,13 +153,8 @@ int main()
     {
         std::cerr << "Generated collision-free samples" << std::endl;
     }
-    /** @} */
 
-    /// Convert Eigen vectors to std::vector<double> for planner API.
-    std::vector<double> startPose(qStartPose.data(), qStartPose.data() + qStartPose.size());
-    std::vector<double> goalPose (qGoalPose.data(),  qGoalPose.data()  + qGoalPose.size());
-    
-    /// Optional pause before planning (e.g., to inspect start/goal in the viewer).
+    // Optional pause before planning (e.g., to inspect start/goal in the viewer).
     //std::this_thread::sleep_for(std::chrono::duration<double>(10));
 
     /**
@@ -169,7 +164,7 @@ int main()
      */
     std::cerr << " press Enter to  start planning" << std::endl;
     cpproboplan::crWaitForKeyPress();
-    bool isSolved = RRTPlanner.solve(startPose, goalPose);
+    bool isSolved = RRTPlanner.solve(qStartPose, qGoalPose);
 
     if (!isSolved)
     {
@@ -182,17 +177,16 @@ int main()
     
     /** @name Retrieve and report results
      *  Extract the planned path, success flag, and cost from the planner.
-     *  @{ */
+     * */
     auto result = RRTPlanner.getResult();
-    std::vector<std::vector<double>>  solPath   = result.path;     ///< Discrete joint-space waypoints
-    bool                              isFoundPath = result.isSuccess; ///< Redundant success flag
-    double                            cost        = result.cost;      ///< Total Euclidean distance (joint space)
+    rplStlCollection<rplState> solPath  = result.path;     ///< Discrete joint-space waypoints
+    bool isFoundPath = result.isSuccess; ///< Redundant success flag
+    double cost  = result.cost;      ///< Total Euclidean distance (joint space)
     
     std::cerr << "number of Joints in Path : " << solPath.size() << std::endl;
     std::cerr << "Total Euclidean distance in joint space: " << cost << std::endl;
-    /** @} */
 
-    
+
     // std::this_thread::sleep_for(std::chrono::duration<double>(10));
 
     /// Access underlying Meshcat instance if needed for custom visualization.
@@ -204,7 +198,7 @@ int main()
     */
     for (int i = 0; i < static_cast<int>(solPath.size()); ++i)
     {
-        mVis.stepSim(Eigen::Map<pin::Model::ConfigVectorType>(solPath[i].data(), solPath[i].size()));
+        mVis.stepSim(solPath[i]);
         std::cerr << "iteration " << i << std::endl;
         std::cerr << "Press ENTER to step to next joint..." << std::endl;
         cpproboplan::crWaitForKeyPress();

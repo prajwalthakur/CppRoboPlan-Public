@@ -7,19 +7,26 @@
 #include "/root/workspace/src/planner/base/StateInformation.h"
 #include "/root/workspace/src/core/Memory.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 using namespace cpproboplan::planner;
 
+////////////////////////////////////////////////////////////////////////
 
+inline Eigen::VectorXd vecd(std::initializer_list<double> l) {
+    Eigen::VectorXd v(l.size());
+    std::copy(l.begin(), l.end(), v.data());
+    return v;
+}
 
-
+////////////////////////////////////////////////////////////////////////
 
 template <template <typename> class T, typename Q>
 using plNodePtr = plNode<T, Q>*;
 
-using plSharedNodePtrF       = cpproboplan::rplSharedPtr<plNode<plJointState, double>>;
-using plSharedStateSpacePtrF = cpproboplan::rplSharedPtr<plStateSpace<plJointState, double>>;
-using kdTreeUniquePtr        = cpproboplan::rplUniquePtr<plKdTree<plJointState,double>>;
+using plSharedNodePtrF       = rplSharedPtr<plNode<plJointState, double>>;
+using plSharedStateSpacePtrF = rplSharedPtr<plStateSpace<plJointState, double>>;
+using kdTreeUniquePtr        = rplUniquePtr<plKdTree<plJointState,double>>;
 
 
 // Test fixture for kdTree
@@ -49,10 +56,10 @@ protected:
 
     plSharedStateSpacePtrF plStateSpacePtr{nullptr};
 
-    std::vector<double> node1data = {1.0, 0.0};
-    std::vector<double> node2data = {-1.0, 0.0};
-    std::vector<double> node3data = {0.0, 0.0};
-    std::vector<double> node4data = {0.0, 1.0};
+    rplCollection<double> node1data = vecd({1.0, 0.0});
+    rplCollection<double> node2data = vecd({-1.0, 0.0});
+    rplCollection<double> node3data = vecd({0.0, 0.0});
+    rplCollection<double> node4data = vecd({0.0, 1.0});
 };
 
 
